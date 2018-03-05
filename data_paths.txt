@@ -1,0 +1,4 @@
+DATA_URL = "https://www.kaggle.com/c/quora-question-pairs/data"
+TRAIN_CSV = "~/raw_data/train.csv"
+TEST_CSV = "~/raw_data/test.csv"
+
