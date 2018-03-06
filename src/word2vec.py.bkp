@@ -109,24 +109,24 @@ def collect_data(vocabulary_size=100000):
     input: vocab_size - int
     output: data - list, freq - list of 2 unit components, dictionary - dict, inverse_dictionary - dict
     """
-    files = [train_df, test_df]
+    files = [train_df]#, test_df]
     vocabulary = read_data(files)
     print(vocabulary[:10])
     data, freq, dictionary, inverse_dictionary = build_dataset(vocabulary, vocabulary_size)
     del vocabulary
     return data, freq, dictionary, inverse_dictionary
 
-vocab_size = 121326 #150
+vocab_size = 100 #100000
 question_cols = ['question1', 'question2']
 data, freq, dictionary, inverse_dictionary = collect_data(vocabulary_size=vocab_size)
 print(data[:10])
 
 window_size = 3
-vector_dim = 300 #30
-epochs = 240000 #5000
+vector_dim = 30 #300
+epochs = 5000 #1000000
 
-valid_size = 16 #5
-valid_window = 100 #10
+valid_size = 5 #16
+valid_window = 10 #100
 valid_examples = np.random.choice(valid_window, valid_size, replace=False)
 
 sampling_table = sequence.make_sampling_table(vocab_size)
@@ -192,17 +192,17 @@ for cnt in range(epochs):
     arr_2[0,] = word_context[idx]
     arr_3[0,] = labels[idx]
     loss = model.train_on_batch([arr_1, arr_2], arr_3)
-    if cnt % 100 == 0: #10
+    if cnt % 10 == 0: #100
         print("Iteration {}, loss={}".format(cnt, loss))
-    if cnt % 10000 == 0: #100
+    if cnt % 100 == 0: #10000
         sim_cb.run_sim()
 zeros_row = np.array([0] * vector_dim)
 zeros_row.shape = (1, vector_dim)
 embedding_matrix = embedding.get_weights()[0]
+#print(zeros_row.shape)
 #print(embedding_matrix.shape)
 embedding_matrix = np.concatenate((zeros_row, embedding_matrix), axis = 0)
 #print(embedding_matrix)
 np.savetxt(COMPUTE_DATA_PATH + 'embedding_matrix.txt', embedding_matrix, fmt="%.5f")
 #np.savetxt('embedding_matrix.txt', embedding_matrix)
-
 np.save(COMPUTE_DATA_PATH + 'inverse_dictionary.npy', inverse_dictionary)
