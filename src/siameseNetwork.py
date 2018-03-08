@@ -10,7 +10,6 @@ import os
 
 import numpy as np
 import tensorflow as tf
-#import word2vec
 from sentenceToWordList import *
 
 inverse_dictionary = np.loadtxt(COMPUTE_DATA_PATH + 'inverse_dictionary.npy')
@@ -44,7 +43,7 @@ n_hidden = 50
 gradientClippingNorm = 1.25
 batch_size = 64
 #keep n_epoch a multiple of 5
-n_epoch = 1
+n_epoch = 50
 embedding_dim = 300
 embeddingsMatrix = np.loadtxt(COMPUTE_DATA_PATH + 'embedding_matrix.txt', fmt = "%.5f")
 
@@ -77,8 +76,7 @@ siameseLSTM.compile(loss='mean_squared_error', optimizer=optimizer, metrics=['ac
 
 training_start_time = time()
 
-print("Started training")
-for i in range(n_epoch):
+for i in range(n_epoch/5):
 	siameseLSTMTrained = siameseLSTM.fit([xTrain['question1'], xTrain['question2']], yTrain.values, batch_size=batch_size, nb_epoch=n_epoch,
                             	validation_data=([xValidation['question1'], xValidation['question2']], yValidation.values))
 	siameseLSTMTrained.save('siameseLSTMTrained.h5')
