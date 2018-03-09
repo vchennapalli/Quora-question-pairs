@@ -1,5 +1,15 @@
+from sklearn.model_selection import train_test_split
+import matplotlib.pyplot as plt
+import itertools
+import datetime
+
+from time import time
+from keras.preprocessing.sequence import pad_sequences
+from keras.layers import Input, Embedding, LSTM, Merge
+from keras.optimizers import Adadelta
+from keras.callbacks import ModelCheckpoint
 from keras.models import Model
-from keras.layers import Input, Dense, Reshape, merge
+from keras.layers import Input, Dense, Reshape, merge, concatenate
 from keras.layers.embeddings import Embedding
 from keras.preprocessing.sequence import skipgrams
 from nltk.corpus import stopwords
@@ -12,11 +22,14 @@ import numpy as np
 import tensorflow as tf
 from sentenceToWordList import *
 
-inverse_dictionary = np.loadtxt(COMPUTE_DATA_PATH + 'inverse_dictionary.npy')
+inverse_dictionary = np.load(COMPUTE_DATA_PATH + 'inverse_dictionary.npy').item()
+for key, value in inverse_dictionary.iteritems():
+	inverse_dictionary[key] = value.encode('ascii')
+
+embeddingsMatrix = np.loadtxt(COMPUTE_DATA_PATH + 'embedding_matrix.txt')
+
 dictionary = {}
-maxSeqLength = max(test_df.question1.map(lambda x: len(x)).max(),
-               test_df.question2.map(lambda x: len(x)).max())
-del test_df
+maxSeqLength = 0
 
 for index in range(len(inverse_dictionary)):
 	dictionary[inverse_dictionary[index]] = index
@@ -31,12 +44,16 @@ for dataTuple in [train_df, test_df]:
 			dataTuple.set_value(index, question, numVector)
 			maxSeqLength = max(maxSeqLength, len(numVector))
 
-validation_size = 40000
-xTrain, xValidation, yTrain, yValidation = train_test_split(train_df[questions_cols], train_df['is_duplicate'], test_size=validation_size)
-for dataTuple in [xTrain, xTest]:
-	for question in questions_cols:
-		dataTuple[question] = pad_sequences(dataset[question], maxLen=maxSeqLength)
+del test_df
 
+validation_size = 40000
+xTrain, xValidation, yTrain, yValidation = train_test_split(train_df[question_cols], train_df['is_duplicate'], test_size=validation_size)
+
+xTrain = [xTrain.question1, xTrain.question2]
+xValidation = [xValidation.question1, xValidation.question2]
+for dataTuple in [xTrain, xValidation]:
+	for i in range(2):
+		dataTuple[i] = pad_sequences(dataTuple[i], maxlen=maxSeqLength)
 
 # Model variables
 n_hidden = 50
@@ -45,29 +62,22 @@ batch_size = 64
 #keep n_epoch a multiple of 5
 n_epoch = 50
 embedding_dim = 300
-embeddingsMatrix = np.loadtxt(COMPUTE_DATA_PATH + 'embedding_matrix.txt', fmt = "%.5f")
-
-
-def exponent_neg_manhattan_distance(left, right):
-    return K.exp(-K.sum(K.abs(left-right), axis=1, keepdims=True))
 
 leftInput = Input(shape=(maxSeqLength,), dtype='int32')
 rightInput = Input(shape=(maxSeqLength,), dtype='int32')
 
-embeddingLayer = Embedding(len(embeddings), embedding_dim, weights=[embeddings], input_length=maxSeqLength, trainable=False)
+embeddingLayer = Embedding(len(embeddingsMatrix), embedding_dim, weights=[embeddingsMatrix], input_length=maxSeqLength, trainable=False)
 
-encodedLeft = embedding_layer(leftInput)
-encodedRight = embedding_layer(rightInput)
+encodedLeft = embeddingLayer(leftInput)
+encodedRight = embeddingLayer(rightInput)
 
 sharedLstm = LSTM(n_hidden)
 
 leftOutput = sharedLstm(encodedLeft)
 rightOutput = sharedLstm(encodedRight)
-distance = keras.layers.add()
 
-output = keras.layers.concatenate([leftOutput, rightOutput])
+output = concatenate([leftOutput, rightOutput])
 output = Dense(1, activation = 'sigmoid')(output)
-#malstmDistance = Merge(mode=lambda x: exponent_neg_manhattan_distance(x[0], x[1]), output_shape=lambda x: (x[0][0], 1))([leftOutput, rightOutput])
 
 siameseLSTM = Model([leftInput, rightInput], [output])
 optimizer = Adadelta(clipnorm=gradientClippingNorm)
@@ -76,10 +86,14 @@ siameseLSTM.compile(loss='mean_squared_error', optimizer=optimizer, metrics=['ac
 
 training_start_time = time()
 
+print("Started training")
 for i in range(n_epoch/5):
-	siameseLSTMTrained = siameseLSTM.fit([xTrain['question1'], xTrain['question2']], yTrain.values, batch_size=batch_size, nb_epoch=n_epoch,
-                            	validation_data=([xValidation['question1'], xValidation['question2']], yValidation.values))
-	siameseLSTMTrained.save('siameseLSTMTrained.h5')
+	siameseLSTMTrained = siameseLSTM.fit([xTrain[0], xTrain[1]], yTrain.values, batch_size=batch_size, epochs=5,
+                            	validation_data=([xValidation[0], xValidation[1]], yValidation.values))
+	
+	siameseLSTM.save(COMPUTE_DATA_PATH + 'siameseLSTM.h5')
+	#simaeseLSTM = load_model(COMPUTE_DATA_PATH + 'siameseLSTM.h5')
+	print("Finished epochs "+ repr((i+1)*5))
 
 print("Training time finished.\n{} epochs in {}".format(n_epoch, datetime.timedelta(seconds=time()-training_start_time)))
 
