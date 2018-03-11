@@ -14,6 +14,7 @@ from keras.layers.embeddings import Embedding
 from keras.preprocessing.sequence import skipgrams
 from nltk.corpus import stopwords
 from keras.preprocessing import sequence
+from keras.models import model_from_json
 
 import urllib
 import os
@@ -23,7 +24,7 @@ import tensorflow as tf
 from sentenceToWordList import *
 
 inverse_dictionary = np.load(COMPUTE_DATA_PATH + 'inverse_dictionary.npy').item()
-for key, value in inverse_dictionary.iteritems():
+for key, value in inverse_dictionary.items():
 	inverse_dictionary[key] = value.encode('ascii')
 
 embeddingsMatrix = np.loadtxt(COMPUTE_DATA_PATH + 'embedding_matrix.txt')
@@ -32,7 +33,7 @@ dictionary = {}
 maxSeqLength = 0
 
 for index in range(len(inverse_dictionary)):
-	dictionary[inverse_dictionary[index]] = index
+	dictionary[inverse_dictionary[index].decode("utf-8")] = index
 	
 for dataTuple in [train_df, test_df]:
 	for index, row in dataTuple.iterrows():
@@ -87,15 +88,39 @@ siameseLSTM.compile(loss='mean_squared_error', optimizer=optimizer, metrics=['ac
 training_start_time = time()
 
 print("Started training")
-for i in range(n_epoch/5):
-	siameseLSTMTrained = siameseLSTM.fit([xTrain[0], xTrain[1]], yTrain.values, batch_size=batch_size, epochs=5,
+for i in range(n_epoch):
+	siameseLSTMTrained = siameseLSTM.fit([xTrain[0], xTrain[1]], yTrain.values, batch_size=batch_size, epochs=1,
                             	validation_data=([xValidation[0], xValidation[1]], yValidation.values))
 	
-	siameseLSTM.save(COMPUTE_DATA_PATH + 'siameseLSTM.h5')
+	siameseLSTM_JSON = siameseLSTM.to_json()
+	with open("../models/siameseLSTM_JSON.json","w") as json_file:
+		json_file.write(siameseLSTM_JSON)
+	siameseLSTM.save_weights("../models/siameseLSTM_WEIGHTS.h5")
+	siameseLSTM.save("../models/siameseLSTM_model.h5")
 	#simaeseLSTM = load_model(COMPUTE_DATA_PATH + 'siameseLSTM.h5')
-	print("Finished epochs "+ repr((i+1)*5))
+	print("Finished epochs "+ repr(i+1))
 
 print("Training time finished.\n{} epochs in {}".format(n_epoch, datetime.timedelta(seconds=time()-training_start_time)))
+
+
+# load json and create model
+json_file = open('../models/siameseLSTM_JSON.json', 'r')
+loaded_model_json = json_file.read()
+json_file.close()
+loaded_model = model_from_json(loaded_model_json)
+# load weights into new model
+loaded_model.load_weights("../models/siameseLSTM_WEIGHTS.h5")
+print("Loaded model from disk")
+
+predictions = loaded_model.predict([xTrain[0],xTrain[1]])
+
+print("predictions ready")
+print("Geerating sub file")
+import pandas as pdn
+sub_df = pd.DataFrame(data=predictions,columns={"is_duplicate"})
+sub_df.to_csv(path_or_buf="../results/sub.csv", columns={"is_duplicate"}, header=True, index=True, index_label="test_id")
+
+
 
 plt.plot(siameseLSTMTrained.history['acc'])
 plt.plot(siameseLSTMTrained.history['val_acc'])
