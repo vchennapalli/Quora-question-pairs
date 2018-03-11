@@ -47,7 +47,7 @@ for dataTuple in [train_df, test_df]:
 
 del test_df
 
-validation_size = 40000
+validation_size = 10
 xTrain, xValidation, yTrain, yValidation = train_test_split(train_df[question_cols], train_df['is_duplicate'], test_size=validation_size)
 
 xTrain = [xTrain.question1, xTrain.question2]
@@ -61,7 +61,7 @@ n_hidden = 50
 gradientClippingNorm = 1.25
 batch_size = 64
 #keep n_epoch a multiple of 5
-n_epoch = 50
+n_epoch = 1
 embedding_dim = 300
 
 leftInput = Input(shape=(maxSeqLength,), dtype='int32')
@@ -93,23 +93,23 @@ for i in range(n_epoch):
                             	validation_data=([xValidation[0], xValidation[1]], yValidation.values))
 	
 	siameseLSTM_JSON = siameseLSTM.to_json()
-	with open("../models/siameseLSTM_JSON.json","w") as json_file:
+	with open("siameseLSTM_JSON.json","w") as json_file:
 		json_file.write(siameseLSTM_JSON)
-	siameseLSTM.save_weights("../models/siameseLSTM_WEIGHTS.h5")
-	siameseLSTM.save("../models/siameseLSTM_model.h5")
+	siameseLSTM.save_weights("siameseLSTM_WEIGHTS.h5")
+	siameseLSTM.save("siameseLSTM_model.h5")
 	#simaeseLSTM = load_model(COMPUTE_DATA_PATH + 'siameseLSTM.h5')
-	print("Finished epochs "+ repr(i+1))
+	print("Finished epochs "+ repr((i+1)*5))
 
 print("Training time finished.\n{} epochs in {}".format(n_epoch, datetime.timedelta(seconds=time()-training_start_time)))
 
 
 # load json and create model
-json_file = open('../models/siameseLSTM_JSON.json', 'r')
+json_file = open('siameseLSTM_JSON.json', 'r')
 loaded_model_json = json_file.read()
 json_file.close()
 loaded_model = model_from_json(loaded_model_json)
 # load weights into new model
-loaded_model.load_weights("../models/siameseLSTM_WEIGHTS.h5")
+loaded_model.load_weights("siameseLSTM_WEIGHTS.h5")
 print("Loaded model from disk")
 
 predictions = loaded_model.predict([xTrain[0],xTrain[1]])
@@ -118,7 +118,7 @@ print("predictions ready")
 print("Geerating sub file")
 import pandas as pdn
 sub_df = pd.DataFrame(data=predictions,columns={"is_duplicate"})
-sub_df.to_csv(path_or_buf="../results/sub.csv", columns={"is_duplicate"}, header=True, index=True, index_label="test_id")
+sub_df.to_csv(path_or_buf="sub.csv", columns={"is_duplicate"}, header=True, index=True, index_label="test_id")
 
 
 
