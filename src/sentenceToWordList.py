@@ -2,15 +2,15 @@ import re
 import pandas as pd
 
 #FILEPATHS
-TRAIN_CSV = "../raw_data/train.csv"
-TEST_CSV = "../raw_data/test.csv"
+TRAIN_CSV = "~/raw_data/train.csv"
+TEST_CSV = "~/raw_data/test.csv"
 COMPUTE_DATA_PATH = "../computed_data/"
-SUB_TEST_CSV = "../models/test1.csv"
+MODELS_PATH = "../models/"
+RESULTS_PATH = "../results/"
 
 #LOADS TRAINING AND TEST SET
 train_df = pd.read_csv(TRAIN_CSV)
 test_df = pd.read_csv(TEST_CSV)
-sub_test_df = pd.read_csv(SUB_TEST_CSV)
 
 vocab_size = 121326 #150
 question_cols = ['question1', 'question2']
