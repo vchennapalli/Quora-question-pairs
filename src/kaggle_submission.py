@@ -35,7 +35,7 @@ maxSeqLength = 37
 for index in range(len(inverse_dictionary)):
 	dictionary[inverse_dictionary[index].decode("utf-8")] = index
 	
-for dataTuple in [sub_test_df]:
+for dataTuple in [test_df]:
 	for index, row in dataTuple.iterrows():
 		for question in question_cols:
 			numVector = []
@@ -46,7 +46,7 @@ for dataTuple in [sub_test_df]:
 			maxSeqLength = max(maxSeqLength, len(numVector))
 
 validation_size = 0
-xTrain, xValidation, yTrain, yValidation = train_test_split(sub_test_df[question_cols], sub_test_df['test_id'], test_size=validation_size)
+xTrain, xValidation, yTrain, yValidation = train_test_split(test_df[question_cols], test_df['test_id'], test_size=validation_size)
 
 xTrain = [xTrain.question1, xTrain.question2]
 xValidation = [xValidation.question1, xValidation.question2]
@@ -55,12 +55,12 @@ for dataTuple in [xTrain, xValidation]:
 		dataTuple[i] = pad_sequences(dataTuple[i], maxlen=maxSeqLength)
 
 # load json and create model
-json_file = open('siameseLSTM_JSON.json', 'r')
+json_file = open(MODELS_PATH + 'siameseLSTM_JSON.json', 'r')
 loaded_model_json = json_file.read()
 json_file.close()
 loaded_model = model_from_json(loaded_model_json)
 # load weights into new model
-loaded_model.load_weights("siameseLSTM_WEIGHTS.h5")
+loaded_model.load_weights(MODELS_PATH + "siameseLSTM_WEIGHTS.h5")
 print("Loaded model from disk")
 
 predictions = loaded_model.predict([xTrain[0],xTrain[1]])
@@ -73,5 +73,5 @@ data_sub = {'test_id':yTrain, 'is_duplicate': predictions}
 
 sub_df = pd.DataFrame(data=data_sub, columns={'test_id','is_duplicate'})
 sub_df = sub_df[['test_id','is_duplicate']]
-sub_df.to_csv(path_or_buf="../kaggle_sub.csv",columns={"test_id","is_duplicate"},header=True)
+sub_df.to_csv(path_or_buf=RESULTS_PATH + "kaggle_sub.csv",columns={"test_id","is_duplicate"},header=True)
 print("File ready!")
