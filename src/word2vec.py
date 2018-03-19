@@ -1,10 +1,3 @@
-from keras.models import Model
-from keras.layers.embeddings import Embedding
-from keras.layers import Input, Dense, Reshape, merge
-from keras.preprocessing import sequence
-from keras.preprocessing.sequence import skipgrams
-
-
 import urllib
 import collections
 import os
@@ -12,6 +5,13 @@ import re
 
 import numpy as np
 import tensorflow as tf
+
+from keras.models import Model
+from keras.layers.embeddings import Embedding
+from keras.layers import Input, Dense, Reshape, merge
+from keras.preprocessing import sequence
+from keras.preprocessing.sequence import skipgrams
+
 from sentenceToWordList import *
 
 
@@ -23,8 +23,8 @@ def readData(files):
     output: all the word from the train and test datafiles - list
     """
     vocab = []
-    for d in files:
-        for i, r in d.iterrows():
+    for f in files:
+        for i, r in f.iterrows():
             for q in qCols:
                 vocab.extend(question_to_wordlist(r[q]))
     return vocab
@@ -66,13 +66,14 @@ def collectDataset():
 
 data, freq, dictionary, inverseDict = collectDataset()
 
-windowSize = 5
-vectorDim = 300 #30
-epochs = 70000 #5000
+windowSize, vectorDim, epochs = 5, 300, 70000
 
-valSize = 20 #5
-valWindow = 120 #10
+valSize, valWindow = 20, 120 #5, 10
 valExamples = np.random.choice(valWindow, valSize, replace=False)
+
+wordTargetArray = np.zeros((1,))
+wordContextArray = np.zeros((1,))
+labelsArray = np.zeros((1,))
 
 sampleTable = sequence.make_sampling_table(vocabSize)
 couples, labels = skipgrams(data, vocabSize, window_size=windowSize, sampling_table=sampleTable)
@@ -89,17 +90,17 @@ context = Reshape((vectorDim, 1))(context)
 
 similarity = merge([target, context], mode='cos', dot_axes=0)
 
-dot_product = merge([target, context], mode='dot', dot_axes=1)
-dot_product = Reshape((1,))(dot_product)
+dotProduct = merge([target, context], mode='dot', dot_axes=1)
+dotProduct = Reshape((1,))(dotProduct)
 
-output = Dense(1, activation='sigmoid')(dot_product)
+output = Dense(1, activation='sigmoid')(dotProduct)
 
 model = Model(input=[inputTarget, inputContext], output=output)
 model.compile(loss='binary_crossentropy', optimizer='rmsprop')
 
 validationModel = Model(input=[inputTarget, inputContext], output=similarity)
 
-class SimilarityCallback:
+class SimCallback:
     def runSim(self):
         for i in range(valSize):
             valid_word = inverseDict[valExamples[i]]
@@ -123,11 +124,8 @@ class SimilarityCallback:
             sim[i] = output
         return sim
 
-simCallback = SimilarityCallback()
+simCallback = SimCallback()
 
-wordTargetArray = np.zeros((1,))
-wordContextArray = np.zeros((1,))
-labelsArray = np.zeros((1,))
 for count in range(epochs):
     idx = np.random.randint(0, len(labels)-1)
     wordTargetArray[0,] = wordTarget[idx]
@@ -148,5 +146,4 @@ np.savetxt(COMPUTE_DATA_PATH + 'embedding_matrix.txt', embeddingMatrix, fmt="%.5
 #np.savetxt('embeddingMatrix.txt', embeddingMatrix)
 
 np.save(COMPUTE_DATA_PATH + 'inverse_dictionary.npy', inverseDict)
-
 np.save(COMPUTE_DATA_PATH + 'dictionary.npy', dictionary)
