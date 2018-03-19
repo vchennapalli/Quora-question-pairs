@@ -60,19 +60,18 @@ def collectDataset():
     """
     files = [trainDatafile, Datafile]
     vocabulary = readData(files)
-    print(vocabulary[:10])
     data, freq, dictionary, inverseDict = buildDataset(vocabulary)
     del vocabulary
     return data, freq, dictionary, inverseDict
 
 data, freq, dictionary, inverseDict = collectDataset()
 
-windowSize = 3
-vectorDimen = 300 #30
+windowSize = 5
+vectorDim = 300 #30
 epochs = 240000 #5000
 
-valSize = 16 #5
-valWindow = 100 #10
+valSize = 20 #5
+valWindow = 120 #10
 valExamples = np.random.choice(valWindow, valSize, replace=False)
 
 sampleTable = sequence.make_sampling_table(vocabSize)
@@ -82,11 +81,11 @@ wordTarget = np.array(wordTarget, dtype="int32")
 wordContext = np.array(wordContext, dtype="int32")
 
 inputTarget, inputContext = Input((1,)), Input((1,))
-embedding = Embedding(vocabSize, vectorDimen, input_length=1, name='embedding')
+embedding = Embedding(vocabSize, vectorDim, input_length=1, name='embedding')
 target = embedding(inputTarget)
-target = Reshape((vectorDimen, 1))(target)
+target = Reshape((vectorDim, 1))(target)
 context = embedding(inputContext)
-context = Reshape((vectorDimen, 1))(context)
+context = Reshape((vectorDim, 1))(context)
 
 similarity = merge([target, context], mode='cos', dot_axes=0)
 
@@ -116,12 +115,11 @@ class SimilarityCallback:
     @staticmethod
     def getSim(validIdx):
         sim = np.zeros((vocabSize,))
-        in_arr1 = np.zeros((1,))
-        in_arr2 = np.zeros((1,))
-        in_arr1[0,] = validIdx
+        internalArr1, internalArr2 = np.zeros((1,)), np.zeros((1,))
+        internalArr1[0,] = validIdx
         for i in range(vocabSize):
-            in_arr2[0,] = i
-            output = validationModel.predict_on_batch([in_arr1, in_arr2])
+            internalArr2[0,] = i
+            output = validationModel.predict_on_batch([internalArr1, internalArr2])
             sim[i] = output
         return sim
 
@@ -140,8 +138,8 @@ for count in range(epochs):
         print("Iteration {}, loss={}".format(count, loss))
     if count % 10000 == 0: #100
         simCb.runSim()
-zerosRow = np.array([0] * vectorDimen)
-zerosRow.shape = (1, vectorDimen)
+zerosRow = np.array([0] * vectorDim)
+zerosRow.shape = (1, vectorDim)
 embeddingMatrix = embedding.get_weights()[0]
 #print(embeddingMatrix.shape)
 embeddingMatrix = np.concatenate((zerosRow, embeddingMatrix), axis = 0)
