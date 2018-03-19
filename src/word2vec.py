@@ -1,8 +1,9 @@
 from keras.models import Model
-from keras.layers import Input, Dense, Reshape, merge
 from keras.layers.embeddings import Embedding
-from keras.preprocessing.sequence import skipgrams
+from keras.layers import Input, Dense, Reshape, merge
 from keras.preprocessing import sequence
+from keras.preprocessing.sequence import skipgrams
+
 
 import urllib
 import collections
@@ -16,80 +17,76 @@ from sentenceToWordList import *
 
 
 """creates the collection of all the words in the datasets and returns """
-def read_data(files):
+def readData(files):
     """
     input: files - list
     output: all the word from the train and test datafiles - list
     """
-    vocabulary = []
-    for dataset in files:
-        for index, row in dataset.iterrows():
-            for question in question_cols:
-                vocabulary.extend(question_to_wordlist(row[question]))
-    return vocabulary
+    vocab = []
+    for d in files:
+        for i, r in d.iterrows():
+            for q in qCols:
+                vocab.extend(question_to_wordlist(r[q]))
+    return vocab
 
 """processes raw input vocabulary into structured dataset"""
-def build_dataset(words, n_words):
+def buildDataset(words):
     """
-    input: words - list, dictionary size - int
-    output: data - list, freq - list of 2 unit components, dictionary - dict, inverse_dictionary - dict
+    input: words - list
+    output: data - list, freq - list of 2 unit components, dictionary - dict, inverseDict - dict
     """
-    freq = [['UKN', -1]]
-    freq.extend(collections.Counter(words).most_common(n_words - 1))
+    freq = [['unknown', -1]]
+    freq.extend(collections.Counter(words).most_common())
     dictionary = dict()
-    for word, count in freq:
-        dictionary[word] = len(dictionary)
+    for w, c in freq:
+        dictionary[w] = len(dictionary)
     data = list()
     unk_count = 0
-    for word in words:
-        if word in dictionary:
-            index = dictionary[word]
+    for w in words:
+        if w in dictionary:
+            i = dictionary[w]
         else:
-            index = 0
-            unk_count += 1
-        data.append(index)
-    freq[0][1] = unk_count
-    inverse_dictionary = dict(zip(dictionary.values(), dictionary.keys()))
-    return data, freq, dictionary, inverse_dictionary
+            i = 0
+            unknown += 1
+        data.append(i)
+    freq[0][1] = unknown
+    inverseDict = dict(zip(dictionary.values(), dictionary.keys()))
+    return data, freq, dictionary, inverseDict
 
 """performs primary preprocessing of data and returns polished data"""
-def collect_data(vocabulary_size=100000):
+def collectDataset():
     """
-    input: vocab_size - int
-    output: data - list, freq - list of 2 unit components, dictionary - dict, inverse_dictionary - dict
+    output: data - list, freq - list of 2 unit components, dictionary - dict, inverseDict - dict
     """
-    files = [train_df, test_df]
-    vocabulary = read_data(files)
+    files = [trainDatafile, Datafile]
+    vocabulary = readData(files)
     print(vocabulary[:10])
-    data, freq, dictionary, inverse_dictionary = build_dataset(vocabulary, vocabulary_size)
+    data, freq, dictionary, inverseDict = buildDataset(vocabulary)
     del vocabulary
-    return data, freq, dictionary, inverse_dictionary
+    return data, freq, dictionary, inverseDict
 
-data, freq, dictionary, inverse_dictionary = collect_data(vocabulary_size=vocab_size)
-print(data[:10])
+data, freq, dictionary, inverseDict = collectDataset()
 
-window_size = 3
-vector_dim = 300 #30
+windowSize = 3
+vectorDimen = 300 #30
 epochs = 240000 #5000
 
-valid_size = 16 #5
-valid_window = 100 #10
-valid_examples = np.random.choice(valid_window, valid_size, replace=False)
+valSize = 16 #5
+valWindow = 100 #10
+valExamples = np.random.choice(valWindow, valSize, replace=False)
 
-sampling_table = sequence.make_sampling_table(vocab_size)
-couples, labels = skipgrams(data, vocab_size, window_size=window_size, sampling_table=sampling_table)
-word_target, word_context = zip(*couples)
-word_target = np.array(word_target, dtype="int32")
-word_context = np.array(word_context, dtype="int32")
+sampleTable = sequence.make_sampling_table(vocabSize)
+couples, labels = skipgrams(data, vocabSize, window_size=windowSize, sampling_table=sampleTable)
+wordTarget, wordContext = zip(*couples)
+wordTarget = np.array(wordTarget, dtype="int32")
+wordContext = np.array(wordContext, dtype="int32")
 
-print(couples[:10], labels[:10])
-
-input_target, input_context = Input((1,)), Input((1,))
-embedding = Embedding(vocab_size, vector_dim, input_length=1, name='embedding')
-target = embedding(input_target)
-target = Reshape((vector_dim, 1))(target)
-context = embedding(input_context)
-context = Reshape((vector_dim, 1))(context)
+inputTarget, inputContext = Input((1,)), Input((1,))
+embedding = Embedding(vocabSize, vectorDimen, input_length=1, name='embedding')
+target = embedding(inputTarget)
+target = Reshape((vectorDimen, 1))(target)
+context = embedding(inputContext)
+context = Reshape((vectorDimen, 1))(context)
 
 similarity = merge([target, context], mode='cos', dot_axes=0)
 
@@ -98,60 +95,60 @@ dot_product = Reshape((1,))(dot_product)
 
 output = Dense(1, activation='sigmoid')(dot_product)
 
-model = Model(input=[input_target, input_context], output=output)
+model = Model(input=[inputTarget, inputContext], output=output)
 model.compile(loss='binary_crossentropy', optimizer='rmsprop')
 
-validation_model = Model(input=[input_target, input_context], output=similarity)
+validationModel = Model(input=[inputTarget, inputContext], output=similarity)
 
 class SimilarityCallback:
-    def run_sim(self):
-        for i in range(valid_size):
-            valid_word = inverse_dictionary[valid_examples[i]]
-            top_k = 8  # number of nearest neighbors
-            sim = self._get_sim(valid_examples[i])
-            nearest = (-sim).argsort()[1:top_k + 1]
+    def runSim(self):
+        for i in range(valSize):
+            valid_word = inverseDict[valExamples[i]]
+            topK = 10 
+            sim = self.getSim(valExamples[i])
+            nearest = (-sim).argsort()[1:topK + 1]
             log_str = 'Nearest to %s:' % valid_word
-            for k in range(top_k):
-                close_word = inverse_dictionary[nearest[k]]
+            for i in range(topK):
+                close_word = inverseDict[nearest[i]]
                 log_str = '%s %s,' % (log_str, close_word)
             print(log_str)
 
     @staticmethod
-    def _get_sim(valid_word_idx):
-        sim = np.zeros((vocab_size,))
+    def getSim(validIdx):
+        sim = np.zeros((vocabSize,))
         in_arr1 = np.zeros((1,))
         in_arr2 = np.zeros((1,))
-        in_arr1[0,] = valid_word_idx
-        for i in range(vocab_size):
+        in_arr1[0,] = validIdx
+        for i in range(vocabSize):
             in_arr2[0,] = i
-            out = validation_model.predict_on_batch([in_arr1, in_arr2])
-            sim[i] = out
+            output = validationModel.predict_on_batch([in_arr1, in_arr2])
+            sim[i] = output
         return sim
 
-sim_cb = SimilarityCallback()
+simCb = SimilarityCallback()
 
-arr_1 = np.zeros((1,))
-arr_2 = np.zeros((1,))
-arr_3 = np.zeros((1,))
-for cnt in range(epochs):
+wordTargetArray = np.zeros((1,))
+wordContextArray = np.zeros((1,))
+labelsArray = np.zeros((1,))
+for count in range(epochs):
     idx = np.random.randint(0, len(labels)-1)
-    arr_1[0,] = word_target[idx]
-    arr_2[0,] = word_context[idx]
-    arr_3[0,] = labels[idx]
-    loss = model.train_on_batch([arr_1, arr_2], arr_3)
-    if cnt % 100 == 0: #10
-        print("Iteration {}, loss={}".format(cnt, loss))
-    if cnt % 10000 == 0: #100
-        sim_cb.run_sim()
-zeros_row = np.array([0] * vector_dim)
-zeros_row.shape = (1, vector_dim)
-embedding_matrix = embedding.get_weights()[0]
-#print(embedding_matrix.shape)
-embedding_matrix = np.concatenate((zeros_row, embedding_matrix), axis = 0)
-#print(embedding_matrix)
-np.savetxt(COMPUTE_DATA_PATH + 'embedding_matrix.txt', embedding_matrix, fmt="%.5f")
-#np.savetxt('embedding_matrix.txt', embedding_matrix)
+    wordTargetArray[0,] = wordTarget[idx]
+    wordContextArray[0,] = wordContext[idx]
+    labelsArray[0,] = labels[idx]
+    loss = model.train_on_batch([wordTargetArray, wordContextArray], labelsArray)
+    if count % 100 == 0: #10
+        print("Iteration {}, loss={}".format(count, loss))
+    if count % 10000 == 0: #100
+        simCb.runSim()
+zerosRow = np.array([0] * vectorDimen)
+zerosRow.shape = (1, vectorDimen)
+embeddingMatrix = embedding.get_weights()[0]
+#print(embeddingMatrix.shape)
+embeddingMatrix = np.concatenate((zerosRow, embeddingMatrix), axis = 0)
+#print(embeddingMatrix)
+np.savetxt(COMPUTE_DATA_PATH + 'embedding_matrix.txt', embeddingMatrix, fmt="%.5f")
+#np.savetxt('embeddingMatrix.txt', embeddingMatrix)
 
-np.save(COMPUTE_DATA_PATH + 'inverse_dictionary.npy', inverse_dictionary)
+np.save(COMPUTE_DATA_PATH + 'inverse_dictionary.npy', inverseDict)
 
 np.save(COMPUTE_DATA_PATH + 'dictionary.npy', dictionary)
