@@ -41,7 +41,7 @@ def buildDataset(words):
     for w, c in freq:
         dictionary[w] = len(dictionary)
     data = list()
-    unk_count = 0
+    unknown = 0
     for w in words:
         if w in dictionary:
             i = dictionary[w]
@@ -68,50 +68,50 @@ data, freq, dictionary, inverseDict = collectDataset()
 
 windowSize, vectorDim, epochs = 5, 300, 70000
 
-valSize, valWindow = 20, 120 #5, 10
-valExamples = np.random.choice(valWindow, valSize, replace=False)
+valSize, valWindow = 20, 120 #5, 10 
+valExamples = np.random.choice(valWindow, valSize, replace = False)
 
 wordTargetArray = np.zeros((1,))
 wordContextArray = np.zeros((1,))
 labelsArray = np.zeros((1,))
 
 sampleTable = sequence.make_sampling_table(vocabSize)
-couples, labels = skipgrams(data, vocabSize, window_size=windowSize, sampling_table=sampleTable)
-wordTarget, wordContext = zip(*couples)
-wordTarget = np.array(wordTarget, dtype="int32")
-wordContext = np.array(wordContext, dtype="int32")
+pairs, labels = skipgrams(data, vocabSize, window_size = windowSize, sampling_table = sampleTable)
+wordTarget, wordContext = zip(*pairs)
+wordTarget = np.array(wordTarget, dtype = "int32")
+wordContext = np.array(wordContext, dtype = "int32")
 
 inputTarget, inputContext = Input((1,)), Input((1,))
-embedding = Embedding(vocabSize, vectorDim, input_length=1, name='embedding')
+embedding = Embedding(vocabSize, vectorDim, input_length = 1, name = 'embedding')
 target = embedding(inputTarget)
 target = Reshape((vectorDim, 1))(target)
 context = embedding(inputContext)
 context = Reshape((vectorDim, 1))(context)
 
-similarity = merge([target, context], mode='cos', dot_axes=0)
+similarity = merge([target, context], mode = 'cos', dot_axes = 0)
 
-dotProduct = merge([target, context], mode='dot', dot_axes=1)
+dotProduct = merge([target, context], mode = 'dot', dot_axes = 1)
 dotProduct = Reshape((1,))(dotProduct)
 
-output = Dense(1, activation='sigmoid')(dotProduct)
+output = Dense(1, activation = 'sigmoid')(dotProduct)
 
-model = Model(input=[inputTarget, inputContext], output=output)
-model.compile(loss='binary_crossentropy', optimizer='rmsprop')
+model = Model(input = [inputTarget, inputContext], output = output)
+model.compile(loss = 'binary_crossentropy', optimizer = 'rmsprop')
 
-validationModel = Model(input=[inputTarget, inputContext], output=similarity)
+validationModel = Model(input = [inputTarget, inputContext], output = similarity)
 
 class SimCallback:
     def runSim(self):
         for i in range(valSize):
-            valid_word = inverseDict[valExamples[i]]
+            valWord = inverseDict[valExamples[i]]
             topK = 10 
             sim = self.getSim(valExamples[i])
             nearest = (-sim).argsort()[1:topK + 1]
-            log_str = 'Nearest to %s:' % valid_word
+            logPhrase = 'Nearest to %s:' % valWord
             for i in range(topK):
-                close_word = inverseDict[nearest[i]]
-                log_str = '%s %s,' % (log_str, close_word)
-            print(log_str)
+                nearbyWord = inverseDict[nearest[i]]
+                logPhrase = '%s %s,' % (logPhrase, nearbyWord)
+            print(logPhrase)
 
     @staticmethod
     def getSim(validIdx):
@@ -127,7 +127,7 @@ class SimCallback:
 simCallback = SimCallback()
 
 for count in range(epochs):
-    idx = np.random.randint(0, len(labels)-1)
+    idx = np.random.randint(0, len(labels) - 1)
     wordTargetArray[0,] = wordTarget[idx]
     wordContextArray[0,] = wordContext[idx]
     labelsArray[0,] = labels[idx]
@@ -142,7 +142,7 @@ embeddingMatrix = embedding.get_weights()[0]
 #print(embeddingMatrix.shape)
 embeddingMatrix = np.concatenate((zerosRow, embeddingMatrix), axis = 0)
 #print(embeddingMatrix)
-np.savetxt(COMPUTE_DATA_PATH + 'embedding_matrix.txt', embeddingMatrix, fmt="%.5f")
+np.savetxt(COMPUTE_DATA_PATH + 'embedding_matrix.txt', embeddingMatrix, fmt = "%.5f")
 #np.savetxt('embeddingMatrix.txt', embeddingMatrix)
 
 np.save(COMPUTE_DATA_PATH + 'inverse_dictionary.npy', inverseDict)
