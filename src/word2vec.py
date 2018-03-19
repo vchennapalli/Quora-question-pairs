@@ -68,7 +68,7 @@ data, freq, dictionary, inverseDict = collectDataset()
 
 windowSize = 5
 vectorDim = 300 #30
-epochs = 240000 #5000
+epochs = 70000 #5000
 
 valSize = 20 #5
 valWindow = 120 #10
@@ -123,7 +123,7 @@ class SimilarityCallback:
             sim[i] = output
         return sim
 
-simCb = SimilarityCallback()
+simCallback = SimilarityCallback()
 
 wordTargetArray = np.zeros((1,))
 wordContextArray = np.zeros((1,))
@@ -137,7 +137,7 @@ for count in range(epochs):
     if count % 100 == 0: #10
         print("Iteration {}, loss={}".format(count, loss))
     if count % 10000 == 0: #100
-        simCb.runSim()
+        simCallback.runSim()
 zerosRow = np.array([0] * vectorDim)
 zerosRow.shape = (1, vectorDim)
 embeddingMatrix = embedding.get_weights()[0]
