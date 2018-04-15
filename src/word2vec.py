@@ -1,20 +1,12 @@
-import urllib
-import collections
-import os
-import re
+from keras.models import Model
+from keras.layers import Input, Embedding, Dense, Reshape, merge
+from keras.preprocessing.sequence import make_sampling_table, skipgrams
 
 import numpy as np
-import tensorflow as tf
 
-from keras.models import Model
-from keras.layers.embeddings import Embedding
-from keras.layers import Input, Dense, Reshape, merge
-from keras.preprocessing import sequence
-from keras.preprocessing.sequence import skipgrams
+from collections import Counter
 
 from sentenceToWordList import *
-
-
 
 """creates the collection of all the words in the datasets and returns """
 def readData(files):
@@ -25,7 +17,7 @@ def readData(files):
     vocab = []
     for f in files:
         for i, r in f.iterrows():
-            for q in qCols:
+            for q in question_cols:
                 vocab.extend(question_to_wordlist(r[q]))
     return vocab
 
@@ -36,7 +28,7 @@ def buildDataset(words):
     output: data - list, freq - list of 2 unit components, dictionary - dict, inverseDict - dict
     """
     freq = [['unknown', -1]]
-    freq.extend(collections.Counter(words).most_common())
+    freq.extend(Counter(words).most_common())
     dictionary = dict()
     for w, c in freq:
         dictionary[w] = len(dictionary)
@@ -58,7 +50,8 @@ def collectDataset():
     """
     output: data - list, freq - list of 2 unit components, dictionary - dict, inverseDict - dict
     """
-    files = [trainDatafile, Datafile]
+    #files = [train_df, test_df]
+    files = [train_df]
     vocabulary = readData(files)
     data, freq, dictionary, inverseDict = buildDataset(vocabulary)
     del vocabulary
@@ -75,14 +68,14 @@ wordTargetArray = np.zeros((1,))
 wordContextArray = np.zeros((1,))
 labelsArray = np.zeros((1,))
 
-sampleTable = sequence.make_sampling_table(vocabSize)
-pairs, labels = skipgrams(data, vocabSize, window_size = windowSize, sampling_table = sampleTable)
+sampleTable = make_sampling_table(vocab_size)
+pairs, labels = skipgrams(data, vocab_size, window_size = windowSize, sampling_table = sampleTable)
 wordTarget, wordContext = zip(*pairs)
 wordTarget = np.array(wordTarget, dtype = "int32")
 wordContext = np.array(wordContext, dtype = "int32")
 
 inputTarget, inputContext = Input((1,)), Input((1,))
-embedding = Embedding(vocabSize, vectorDim, input_length = 1, name = 'embedding')
+embedding = Embedding(vocab_size, vectorDim, input_length = 1, name = 'embedding')
 target = embedding(inputTarget)
 target = Reshape((vectorDim, 1))(target)
 context = embedding(inputContext)
@@ -115,10 +108,10 @@ class SimCallback:
 
     @staticmethod
     def getSim(validIdx):
-        sim = np.zeros((vocabSize,))
+        sim = np.zeros((vocab_size,))
         internalArr1, internalArr2 = np.zeros((1,)), np.zeros((1,))
         internalArr1[0,] = validIdx
-        for i in range(vocabSize):
+        for i in range(vocab_size):
             internalArr2[0,] = i
             output = validationModel.predict_on_batch([internalArr1, internalArr2])
             sim[i] = output
@@ -139,9 +132,7 @@ for count in range(epochs):
 zerosRow = np.array([0] * vectorDim)
 zerosRow.shape = (1, vectorDim)
 embeddingMatrix = embedding.get_weights()[0]
-#print(embeddingMatrix.shape)
 embeddingMatrix = np.concatenate((zerosRow, embeddingMatrix), axis = 0)
-#print(embeddingMatrix)
 np.savetxt(COMPUTE_DATA_PATH + 'embedding_matrix.txt', embeddingMatrix, fmt = "%.5f")
 #np.savetxt('embeddingMatrix.txt', embeddingMatrix)
 
