@@ -23,13 +23,14 @@ import numpy as np
 import tensorflow as tf
 from sentenceToWordList import *
 
+del train_df
 inverse_dictionary = np.load(COMPUTE_DATA_PATH + 'inverse_dictionary.npy').item()
 for key, value in inverse_dictionary.items():
 	inverse_dictionary[key] = value.encode('ascii')
 
 
 dictionary = {}
-maxSeqLength = 37
+maxSeqLength = 100
 
 for index in range(len(inverse_dictionary)):
 	dictionary[inverse_dictionary[index].decode("utf-8")] = index
@@ -41,15 +42,13 @@ for dataTuple in [test_df]:
 			for word in question_to_wordlist(row[question]):
 				if (word in dictionary):
 					numVector.append(dictionary[word])
+			if (len(numVector) > 100):
+				numVector = numVector[0:100]
 			dataTuple.set_value(index, question, numVector)
-			maxSeqLength = max(maxSeqLength, len(numVector))
 
-validation_size = 0
-xTrain, xValidation, yTrain, yValidation = train_test_split(test_df[question_cols], test_df['test_id'], test_size=validation_size)
+xTrain = [np.array(test_df['question1'].tolist()), np.array(test_df['question2'].tolist())]
 
-xTrain = [xTrain.question1, xTrain.question2]
-xValidation = [xValidation.question1, xValidation.question2]
-for dataTuple in [xTrain, xValidation]:
+for dataTuple in [xTrain]:
 	for i in range(2):
 		dataTuple[i] = pad_sequences(dataTuple[i], maxlen=maxSeqLength)
 
@@ -60,17 +59,14 @@ json_file.close()
 loaded_model = model_from_json(loaded_model_json)
 # load weights into new model
 loaded_model.load_weights(MODELS_PATH + "siameseLSTM_WEIGHTS.h5")
+
 print("Loaded model from disk")
 
 predictions = loaded_model.predict([xTrain[0],xTrain[1]])
-
 print("predictions ready")
 print("Geerating sub file")
 import pandas as pdn
 
-data_sub = {'test_id':yTrain, 'is_duplicate': predictions}
+sub_df = pd.DataFrame(data=predictions,columns={"is_duplicate"})
+sub_df.to_csv(path_or_buf="../results/kaggle_sub.csv", columns={"is_duplicate"}, header=True, index=True, index_label="test_id")
 
-sub_df = pd.DataFrame(data=data_sub, columns={'test_id','is_duplicate'})
-sub_df = sub_df[['test_id','is_duplicate']]
-sub_df.to_csv(path_or_buf=RESULTS_PATH + "kaggle_sub.csv",columns={"test_id","is_duplicate"},header=True)
-print("File ready!")
