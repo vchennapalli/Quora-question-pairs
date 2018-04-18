@@ -30,7 +30,6 @@ for key, value in inverse_dictionary.items():
 embeddingsMatrix = np.loadtxt(COMPUTE_DATA_PATH + 'embedding_matrix.txt')
 
 dictionary = {}
-maxSeqLength = 100
 
 for index in range(len(inverse_dictionary)):
 	dictionary[inverse_dictionary[index].decode("utf-8")] = index
@@ -42,8 +41,8 @@ for dataTuple in [train_df, test_df]:
 			for word in question_to_wordlist(row[question]):
 				if (word in dictionary):
 					numVector.append(dictionary[word])
-			if (len(numVector) > 100):
-				numVector = numVector[0:100]
+			if (len(numVector) > maxSeqLength):
+				numVector = numVector[0:maxSeqLength]
 			dataTuple.set_value(index, question, numVector)
 
 
@@ -89,7 +88,7 @@ training_start_time = time()
 
 print("Started training")
 for i in range(n_epoch):
-	siameseLSTMTrained = siameseLSTM.fit([xTrain[0], xTrain[1]], yTrain.values, batch_size=batch_size, epochs=3,
+	siameseLSTMTrained = siameseLSTM.fit([xTrain[0], xTrain[1]], yTrain.values, batch_size=batch_size, epochs=4,
                             	validation_data=([xValidation[0], xValidation[1]], yValidation.values))
 	
 	siameseLSTM_JSON = siameseLSTM.to_json()

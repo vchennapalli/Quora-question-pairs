@@ -14,6 +14,7 @@ test_df = pd.read_csv(TEST_CSV)
 
 vocab_size = 121326 #150
 question_cols = ['question1', 'question2']
+maxSeqLength = 65
 
 """preprocesses and converts question to a list of words"""
 def question_to_wordlist(text):

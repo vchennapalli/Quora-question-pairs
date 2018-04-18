@@ -30,7 +30,6 @@ for key, value in inverse_dictionary.items():
 
 
 dictionary = {}
-maxSeqLength = 100
 
 for index in range(len(inverse_dictionary)):
 	dictionary[inverse_dictionary[index].decode("utf-8")] = index
@@ -42,8 +41,8 @@ for dataTuple in [test_df]:
 			for word in question_to_wordlist(row[question]):
 				if (word in dictionary):
 					numVector.append(dictionary[word])
-			if (len(numVector) > 100):
-				numVector = numVector[0:100]
+			if (len(numVector) > maxSeqLength):
+				numVector = numVector[0:maxSeqLength]
 			dataTuple.set_value(index, question, numVector)
 
 xTrain = [np.array(test_df['question1'].tolist()), np.array(test_df['question2'].tolist())]

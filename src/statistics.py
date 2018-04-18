@@ -18,10 +18,9 @@ for dataTuple in [train_df, test_df]:
 		for question in question_cols:
 			numVector = 0
 			for word in question_to_wordlist(row[question]):
-				if (word not in googleStopWords):
 					numVector = numVector + 1
 			lengths.append(numVector)
-			if (numVector > 50):
+			if (numVector > 65):
 				numVector = 0
 				for word in question_to_wordlist(row[question]):
 					if (word not in stops):
