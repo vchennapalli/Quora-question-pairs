@@ -2,13 +2,24 @@ from textblob import TextBlob
 import pandas as pd
 import re
 from textblob import Word
+from pygoose import *
+import nltk
+import json
 
+print("loaded libraries")
 TRAIN_CSV = "~/raw_data/train.csv"
 TEST_CSV = "~/raw_data/test.csv"
 PROCESSED_DATA_PATH = "../processed_data/"
 
-train_df = pd.read_csv(TRAIN_CSV)
-test_df = pd.read_csv(TEST_CSV)
+train_df = pd.read_csv(TRAIN_CSV).fillna('none')
+test_df = pd.read_csv(TEST_CSV).fillna('none')
+
+print("loaded data")
+
+#load json file for spelling correction
+file_obj = open('../processed_data/spell_corrections.json', 'r')
+raw_data = file_obj.read()
+spelling_corrections = json.loads(raw_data)
 
 def process(text, translation):
     for token, replacement in translation.items():
@@ -31,21 +42,27 @@ def digits_to_text(text):
     }
     return process(text, translation)
 
+#def spell_correct(text):
+#    text = TextBlob(text)
+#    nouns = text.noun_phrases
+#    nouns = ' '.join(nouns)
+#    nouns = nouns.split()
+#    words = text.lower().words
+#        
+#    output = []
+#    for word in words:
+#        if word in nouns:
+#            output.append(word)
+#        else:
+#            output.append(str(Word(word).correct()))
+#    string_question = ' '.join(str(word) for word in output)
+#    return string_question
+
 def spell_correct(text):
-    text = TextBlob(text)
-    nouns = text.noun_phrases
-    nouns = ' '.join(nouns)
-    nouns = nouns.split()
-    words = text.lower().words
-        
-    output = []
-    for word in words:
-        if word in nouns:
-            output.append(word)
-        else:
-            output.append(str(Word(word).correct()))
-    string_question = ' '.join(str(word) for word in output)
-    return string_question
+    return ' '.join(
+        spelling_corrections.get(word, word)
+        for word in TextBlob(text).lower().words
+    )
 
 def negation_translate(text):
     translation = {
@@ -86,7 +103,12 @@ def negation_translate(text):
     
     return text
 
+number = 0
 def process_question(question, spellcheck=True):
+    global number
+    number = number+1
+    if number%100000 == 0:
+        print(number)
     if spellcheck:
         question = spell_correct(question)
     
@@ -100,10 +122,15 @@ def process_dataFrame(df):
     df['question1'] = df.apply(lambda row: process_question(row['question1']),axis=1)
     df['question2'] = df.apply(lambda row: process_question(row['question2']),axis=1)
 
-
+print("Function defination done")
 #process both test and train data frames
+print("processing started")
+print("train data shape")
+print(train_df.shape[0])
 process_dataFrame(train_df)
 print("Train Processing done")
+print("Test data shape")
+print(test_df.shape[0])
 process_dataFrame(test_df)
 print("Test processing done")
 
