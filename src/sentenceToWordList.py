@@ -2,11 +2,12 @@ import re
 import pandas as pd
 
 #FILEPATHS
-TRAIN_CSV = "~/raw_data/train.csv"
-TEST_CSV = "~/raw_data/test.csv"
+TRAIN_CSV = "../processed_data/p_train.csv"
+TEST_CSV = "../processed_data/p_test.csv"
 COMPUTE_DATA_PATH = "../computed_data/"
 MODELS_PATH = "../models/"
 RESULTS_PATH = "../results/"
+PROCESSED_DATA_PATH = "../processed_data/"
 
 #LOADS TRAINING AND TEST SET
 train_df = pd.read_csv(TRAIN_CSV)
