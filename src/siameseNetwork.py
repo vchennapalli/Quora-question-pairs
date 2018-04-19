@@ -49,8 +49,8 @@ for dataTuple in [train_df, test_df]:
 validation_size = 40000
 xTrain, xValidation, yTrain, yValidation = train_test_split(train_df[question_cols], train_df['is_duplicate'], test_size=validation_size)
 
-xTrain = [xTrain.question1, xTrain.question2]
-xValidation = [xValidation.question1, xValidation.question2]
+xTrain = [xTrain.question1, xTrain.question2, xTrain.min_freq, xTrain.common_neighbours]
+xValidation = [xValidation.question1, xValidation.question2,  xValidation.min_freq, xValidation.common_neighbours]
 for dataTuple in [xTrain, xValidation]:
 	for i in range(2):
 		dataTuple[i] = pad_sequences(dataTuple[i], maxlen=maxSeqLength)
@@ -65,6 +65,8 @@ embedding_dim = 300
 
 leftInput = Input(shape=(maxSeqLength,), dtype='int32')
 rightInput = Input(shape=(maxSeqLength,), dtype='int32')
+minFreq = Input(shape=(1,), dtype='float32')
+commonNeigh = Input(shape=(1,), dtype='float32')
 
 embeddingLayer = Embedding(len(embeddingsMatrix), embedding_dim, weights=[embeddingsMatrix], input_length=maxSeqLength, trainable=False)
 
@@ -77,9 +79,13 @@ leftOutput = sharedLstm(encodedLeft)
 rightOutput = sharedLstm(encodedRight)
 
 output = concatenate([leftOutput, rightOutput])
+output = Dense(1, activation = 'relu')(output)
+
+output = concatenate([output, minFreq, commonNeigh])
 output = Dense(1, activation = 'sigmoid')(output)
 
-siameseLSTM = Model([leftInput, rightInput], [output])
+
+siameseLSTM = Model([leftInput, rightInput, minFreq, commonNeigh], [output])
 optimizer = Adadelta(clipnorm=gradientClippingNorm)
 
 siameseLSTM.compile(loss='mean_squared_error', optimizer=optimizer, metrics=['accuracy'])
@@ -88,8 +94,8 @@ training_start_time = time()
 
 print("Started training")
 for i in range(n_epoch):
-	siameseLSTMTrained = siameseLSTM.fit([xTrain[0], xTrain[1]], yTrain.values, batch_size=batch_size, epochs=4,
-                            	validation_data=([xValidation[0], xValidation[1]], yValidation.values))
+	siameseLSTMTrained = siameseLSTM.fit([xTrain[0], xTrain[1], xTrain[2], xTrain[3]], yTrain.values, batch_size=batch_size, epochs=4,
+                            	validation_data=([xValidation[0], xValidation[1], xValidation[2], xValidation[3]], yValidation.values))
 	
 	siameseLSTM_JSON = siameseLSTM.to_json()
 	with open("../models/siameseLSTM_JSON.json","w") as json_file:
@@ -101,7 +107,8 @@ for i in range(n_epoch):
 
 print("Training time finished.\n{} epochs in {}".format(n_epoch, datetime.timedelta(seconds=time()-training_start_time)))
 
-xTrain = [np.array(test_df['question1'].tolist()), np.array(test_df['question2'].tolist())]
+xTrain = [np.array(test_df['question1'].tolist()), np.array(test_df['question2'].tolist()), np.array(test_df['min_freq'].tolist()), 
+		np.array(test_df['common_neighbours'].tolist())]
 
 for dataTuple in [xTrain]:
 	for i in range(2):
@@ -117,7 +124,7 @@ loaded_model.load_weights(MODELS_PATH + "siameseLSTM_WEIGHTS.h5")
 
 print("Loaded model from disk")
 
-predictions = loaded_model.predict([xTrain[0],xTrain[1]])
+predictions = loaded_model.predict([xTrain[0],xTrain[1], xTrain[2], xTrain[3]])
 print("predictions ready")
 print("Geerating sub file")
 import pandas as pdn
