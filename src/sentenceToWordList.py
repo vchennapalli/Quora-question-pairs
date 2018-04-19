@@ -2,8 +2,9 @@ import re
 import pandas as pd
 
 #FILEPATHS
+TEST_CSV1 = "../processed_data/split_p_test00.csv"
+TEST_CSV2 = "../processed_data/split_p_test01.csv"
 TRAIN_CSV = "../processed_data/p_train.csv"
-TEST_CSV = "../processed_data/p_test.csv"
 COMPUTE_DATA_PATH = "../computed_data/"
 MODELS_PATH = "../models/"
 RESULTS_PATH = "../results/"
@@ -11,7 +12,12 @@ PROCESSED_DATA_PATH = "../processed_data/"
 
 #LOADS TRAINING AND TEST SET
 train_df = pd.read_csv(TRAIN_CSV)
-test_df = pd.read_csv(TEST_CSV)
+test_df1 = pd.read_csv(TEST_CSV1)
+test_df2 = pd.read_csv(TEST_CSV2)
+test_df = pd.concat([test_df1, test_df2])
+
+print(test_df.shape)
+print(train_df.shape)
 
 vocab_size = 121326 #150
 question_cols = ['question1', 'question2']
