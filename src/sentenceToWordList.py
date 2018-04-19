@@ -2,8 +2,8 @@ import re
 import pandas as pd
 
 #FILEPATHS
-TRAIN_CSV = "../processed_data/p_train.csv"
 TEST_CSV = "../processed_data/p_test.csv"
+TRAIN_CSV = "../processed_data/p_train.csv"
 COMPUTE_DATA_PATH = "../computed_data/"
 MODELS_PATH = "../models/"
 RESULTS_PATH = "../results/"
