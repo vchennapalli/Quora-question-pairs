@@ -45,9 +45,9 @@ for dataTuple in [train_df, test_df]:
 				numVector = numVector[0:maxSeqLength]
 			dataTuple.set_value(index, question, numVector)
 
-
 validation_size = 40000
-xTrain, xValidation, yTrain, yValidation = train_test_split(train_df[question_cols], train_df['is_duplicate'], test_size=validation_size)
+xTrain, xValidation, yTrain, yValidation = train_test_split(train_df[['question1', 'question2', 'min_freq', 'common_neighbours']], 
+								train_df['is_duplicate'], test_size=validation_size)
 
 xTrain = [xTrain.question1, xTrain.question2, xTrain.min_freq, xTrain.common_neighbours]
 xValidation = [xValidation.question1, xValidation.question2,  xValidation.min_freq, xValidation.common_neighbours]
