@@ -1,7 +1,7 @@
 """
 Uses pre-trained GloVe based word-embedding to develop needed embedding matrix
 This could be found at http://nlp.stanford.edu/data/glove.6B.zip
-Utilized this file to calculate the potential typos and shorthands for words
+Utilized this file to calculate the potential typos and shorthands for words in the dataset
 REQUIREMENT: Needs the positioning of the file as given in EMBEDDINGS_FILE variable
 """
 
