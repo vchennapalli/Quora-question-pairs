@@ -23,11 +23,11 @@ import numpy as np
 import tensorflow as tf
 from sentenceToWordList import *
 
-inverse_dictionary = np.load(COMPUTE_DATA_PATH + 'inverse_dictionary.npy').item()
+inverse_dictionary = np.load(COMPUTE_DATA_PATH + 'g_inverse_dictionary.npy').item()
 for key, value in inverse_dictionary.items():
 	inverse_dictionary[key] = value.encode('ascii')
 
-embeddingsMatrix = np.loadtxt(COMPUTE_DATA_PATH + 'embedding_matrix.txt')
+embeddingsMatrix = np.loadtxt(COMPUTE_DATA_PATH + 'g_embedding_matrix.txt')
 
 dictionary = {}
 
