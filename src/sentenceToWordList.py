@@ -2,6 +2,7 @@ import re
 import pandas as pd
 
 #FILEPATHS
+TEST_CSV = "../processed_data/p_test.csv"
 TEST_CSV1 = "../processed_data/split_p_test00.csv"
 TEST_CSV2 = "../processed_data/split_p_test01.csv"
 TRAIN_CSV = "../processed_data/p_train.csv"
