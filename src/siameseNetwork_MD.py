@@ -22,8 +22,11 @@ import os
 import numpy as np
 import tensorflow as tf
 from sentenceToWordList import *
-from util import ManDist
 import keras.backend as K
+
+from math import *
+from decimal import Decimal
+from scipy.spatial import distance
 
 inverse_dictionary = np.load(COMPUTE_DATA_PATH + 'g_inverse_dictionary.npy').item()
 for key, value in inverse_dictionary.items():
@@ -74,6 +77,9 @@ batch_size = 64
 n_epoch = 1
 embedding_dim = 300
 
+def euclidean_distance(l,r):
+ 	return K.sqrt(K.sum(K.square(l - r), axis=-1, keepdims=True))
+
 def manhattan_distance(l, r):
 	abs_v = K.abs(l-r)
 	sum_v = K.sum(abs_v,axis=1,keepdims=True)
@@ -104,9 +110,9 @@ rightOutput = sharedLstm(encodedRight)
 #output = Dense(1, activation = 'relu')(output)
 
 #malstm_distance = ManDist()([leftOutput, rightOutput])
-malstm_distance = Merge(mode=lambda x: manhattan_distance(x[0], x[1]), output_shape=lambda x: (x[0][0], 1))([leftOutput, rightOutput])
+dist = Merge(mode=lambda x: euclidean_distance(x[0], x[1]), output_shape=lambda x: (x[0][0], 1))([leftOutput, rightOutput])
 
-output = concatenate([malstm_distance, minFreq, commonNeigh, q_len1, q_len2, diff_len, word_len1, word_len2, common_words])
+output = concatenate([dist, minFreq, commonNeigh, q_len1, q_len2, diff_len, word_len1, word_len2, common_words])
 output = Dense(1, activation = 'sigmoid')(output)
 
 
