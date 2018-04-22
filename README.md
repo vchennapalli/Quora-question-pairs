@@ -48,8 +48,15 @@ These instructions will get you a copy of the project up and running on your loc
    - data_paths.txt - *holds the paths for the required files*
    
 ## Architecture
-![Architecture](images/arc_dense.png?raw=true "Architecture of the implemented model")
+* Architecture of the model
 
+ ![Architecture](images/final_architecture_overview.jpg?raw=true "Architecture of the implemented model")
+
+* Class diagram showing respective input/output shapes at each layer
+ 
+ ![Class_diagram_of_model](images/model_plot.png?raw=true "Shows respective input/output shapes at each layer")
+
+ 
 Tried with the concatenation of LSTM outputs passed through a dense layer as well as other similarity functions like Manhattan distance, Euclidean Distance, Cosine Similarity etc.
 
 ## Steps to run the code
