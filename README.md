@@ -53,6 +53,13 @@ These instructions will get you a copy of the project up and running on your loc
 Tried with the concatenation of LSTM outputs passed through a dense layer as well as other similarity functions like Manhattan distance, Euclidean Distance, Cosine Similarity etc.
 
 ## Steps to run the code
+git clone https://github.com/vchennapalli/Quora-question-pairs.git
+cd Quora-question-pairs/
+unzip computed_data/g_embedding_matrix.zip processed_data/processed_test_00.zip processed_data/processed_test_01.zip processed_data/processed_train.zip
+cat processed_data/split_p_test00.csv processed_data/split_p_test01.csv > processed_data/p_test.csv
+python3 siameseNetwork.py     // Trains the model and generates predictions.
+unzip models/siameseLSTM_MODEL.zip
+python3 kaggle_submission.py  // For generating predictions on an already trained model.
 
 
 
