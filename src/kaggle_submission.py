@@ -23,17 +23,22 @@ import numpy as np
 import tensorflow as tf
 from sentenceToWordList import *
 
+#train_df and test_df are processed and imported from sentenceToWordList
+#we do not need train_df here, so deleting it
 del train_df
+
+#loading the inverse dictionary
 inverse_dictionary = np.load(COMPUTE_DATA_PATH + 'inverse_dictionary.npy').item()
 for key, value in inverse_dictionary.items():
 	inverse_dictionary[key] = value.encode('ascii')
 
-
+#populating the dictionary
 dictionary = {}
 
 for index in range(len(inverse_dictionary)):
 	dictionary[inverse_dictionary[index].decode("utf-8")] = index
-	
+
+#converting the questions into number vectors
 for dataTuple in [test_df]:
 	for index, row in dataTuple.iterrows():
 		for question in question_cols:
@@ -61,11 +66,12 @@ loaded_model.load_weights(MODELS_PATH + "siameseLSTM_WEIGHTS.h5")
 
 print("Loaded model from disk")
 
+#getting the predictions from the loaded_model
 predictions = loaded_model.predict([xTrain[0],xTrain[1]])
 print("predictions ready")
 print("Geerating sub file")
 import pandas as pdn
 
+#writing the predictions to a csv file for kaggle submission
 sub_df = pd.DataFrame(data=predictions,columns={"is_duplicate"})
 sub_df.to_csv(path_or_buf="../results/kaggle_sub.csv", columns={"is_duplicate"}, header=True, index=True, index_label="test_id")
-

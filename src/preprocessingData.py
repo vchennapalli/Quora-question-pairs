@@ -54,7 +54,7 @@ def digits_to_text(text):
 #    nouns = ' '.join(nouns)
 #    nouns = nouns.split()
 #    words = text.lower().words
-#        
+#
 #    output = []
 #    for word in words:
 #        if word in nouns:
@@ -64,7 +64,7 @@ def digits_to_text(text):
 #    string_question = ' '.join(str(word) for word in output)
 #    return string_question
 
-#checks if each word of text is present in spelling_corrections
+#checks if each word of text is present in spelling_corrections json
 #if present changes to its correct word
 def spell_correct(text):
     return ' '.join(
@@ -72,6 +72,8 @@ def spell_correct(text):
         for word in TextBlob(text).lower().words
     )
 
+#to expand negation
+#using python regular expression matching as it is faster
 def negation_translate(text):
     translation = {
         "can't": 'can not',
@@ -108,9 +110,10 @@ def negation_translate(text):
     text = re.sub(r"e - mail", "email", text)
     text = re.sub(r"j k", "jk", text)
     text = re.sub(r"\s{2,}", " ", text)
-    
+
     return text
 
+#number - to track number of processed questions on screen
 number = 0
 def process_question(question, spellcheck=True):
     global number
@@ -119,13 +122,14 @@ def process_question(question, spellcheck=True):
         print(number)
     if spellcheck:
         question = spell_correct(question)
-    
+
     question = digits_to_text(question)
     question = negation_translate(question)
 
     return question
 
-#remove id, qid1, qid2
+#both the questions in the dataframe are processed
+#df - dataframe to process
 def process_dataFrame(df):
     df['question1'] = df.apply(lambda row: process_question(row['question1']),axis=1)
     df['question2'] = df.apply(lambda row: process_question(row['question2']),axis=1)
@@ -142,13 +146,15 @@ print(test_df.shape[0])
 process_dataFrame(test_df)
 print("Test processing done")
 
+#adding additional columns to the dataframe to add the values later
 #min_freq
 #common_neighbours
 #qid1, qid2
 def add_cols_dataframe(df):
     df['min_freq'] = 0
     df['common_neighbours'] = 0
-
+    
+#add q_ids for only test data set
 def add_qids_dataframe(df):
     len = df.shape[0]
     evens = [x for x in range(len*2+2) if x%2 == 0 and x !=0]
@@ -167,4 +173,3 @@ add_qids_dataframe(test_df)
 train_df.to_csv(PROCESSED_DATA_PATH + "p_train.csv",sep=',',index=False)
 test_df.to_csv(PROCESSED_DATA_PATH + "p_test.csv",sep=',',index=False)
 print("processed files saved")
-
