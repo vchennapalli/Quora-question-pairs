@@ -48,12 +48,24 @@ These instructions will get you a copy of the project up and running on your loc
    - data_paths.txt - *holds the paths for the required files*
    
 ## Architecture
+![Architecture](images/arc_dense.png?raw=true "Architecture of the implemented model")
+
 Tried with the concatenation of LSTM outputs passed through a dense layer as well as other similarity functions like Manhattan distance, Euclidean Distance, Cosine Similarity etc.
 
 ## Steps to run the code
 
 
 
+## Test results
+* First run with basic implementation
+  - Trend of Accuracy and Log Loss percentage over number of epochs on train data set
+  ![Train Basic Results](images/train.png?raw=true "Test results trend")
+  - Trend of Accuracy and Log Loss percentage over number of epochs on validation data set
+  ![Cross Validation Basic Results](images/validation.png?raw=true "Validation results trend")
+
+* After improving the architecture and experimenting
+
+* On Kaggle competition
 
 ## Built With
 
