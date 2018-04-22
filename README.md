@@ -86,7 +86,7 @@ Tried with the concatenation of LSTM outputs passed through a dense layer as wel
 | Siamese LSTM + Glove + Magic features + Normal features | 86 | 0.26116|
 | Siamese LSTM + Glove + Magic features + Normal features + Class weights| 82 | 0.23826|
 | Siamese LSTM + Glove + Magic features  + Normal features + Class weights + two Stacked layers| 83 | 0.20457|
-| Siamese LSTM + Glove + Magic features  + Normal features + Class weights + three Stacked layers| 86 | 0.19680|
+| Siamese LSTM + Glove + Magic features  + Normal features + Class weights + four Stacked layers| 86 | 0.19680|
 
 * On Kaggle
 ![Kaggle Log loss](images/Capture.PNG?raw=true "Test results trend")
