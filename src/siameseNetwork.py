@@ -9,7 +9,7 @@ from keras.layers import Input, Embedding, LSTM, Merge, CuDNNLSTM
 from keras.optimizers import Adadelta
 from keras.callbacks import ModelCheckpoint
 from keras.models import Model
-from keras.layers import Input, Dense, Reshape, merge, concatenate
+from keras.layers import Input, Dense, Reshape, merge, concatenate, BatchNormalization, Dropout, PReLU
 from keras.layers.embeddings import Embedding
 from keras.preprocessing.sequence import skipgrams
 from nltk.corpus import stopwords
@@ -91,13 +91,18 @@ output = concatenate([leftOutput, rightOutput])
 output = Dense(1, activation = 'relu')(output)
 
 output = concatenate([output, minFreq, commonNeigh, q_len1, q_len2, diff_len, word_len1, word_len2, common_words])
+output = BatchNormalization()(output)
+output = Dense(300)(output)
+output = PReLU()(output)
+output = Dropout(0.2)(output)
+output = BatchNormalization()(output)
 output = Dense(1, activation = 'sigmoid')(output)
 
 
 siameseLSTM = Model([leftInput, rightInput, minFreq, commonNeigh, q_len1, q_len2, diff_len, word_len1, word_len2, common_words], [output])
 optimizer = Adadelta(clipnorm=gradientClippingNorm)
 
-siameseLSTM.compile(loss='mean_squared_error', optimizer=optimizer, metrics=['accuracy'])
+siameseLSTM.compile(loss='binary_crossentropy', optimizer=optimizer, metrics=['accuracy'])
 
 training_start_time = time()
 
@@ -106,7 +111,7 @@ for i in range(n_epoch):
 	siameseLSTMTrained = siameseLSTM.fit([xTrain[0], xTrain[1], xTrain[2], xTrain[3], xTrain[4], xTrain[5], xTrain[6], xTrain[7], 
 						xTrain[8], xTrain[9]], yTrain.values, batch_size=batch_size, epochs=4,
                             	validation_data=([xValidation[0], xValidation[1], xValidation[2], xValidation[3], xValidation[4], xValidation[5], 
-					xValidation[6], xValidation[7], xValidation[8], xValidation[9]], yValidation.values))
+					xValidation[6], xValidation[7], xValidation[8], xValidation[9]], yValidation.values), class_weight={0: 1.3233, 1: 0.4472})
 	
 	siameseLSTM_JSON = siameseLSTM.to_json()
 	with open("../models/siameseLSTM_JSON.json","w") as json_file:
