@@ -7,26 +7,32 @@ import nltk
 import json
 
 print("loaded libraries")
+#initially loading the raw data files for the preprocessing
 TRAIN_CSV = "~/raw_data/train.csv"
 TEST_CSV = "~/raw_data/test.csv"
 PROCESSED_DATA_PATH = "../processed_data/"
 
+#initializing the dataframes
 train_df = pd.read_csv(TRAIN_CSV).fillna('none')
 test_df = pd.read_csv(TEST_CSV).fillna('none')
 
 print("loaded data")
 
+#the following spelling corrections json file is generated from the train and test data files
+#we are reading the file to check if any spellings to be corrected by checking each word in each question
 #load json file for spelling correction
 file_obj = open('../processed_data/spell_corrections.json', 'r')
 raw_data = file_obj.read()
 spelling_corrections = json.loads(raw_data)
 
+#process takes the text to be processed and translation on which the processings are based on
 def process(text, translation):
     for token, replacement in translation.items():
         text = text.replace(token, ' ' + replacement + ' ')
     text = text.replace('  ', ' ')
     return text
 
+#to convert digits to text strings
 def digits_to_text(text):
     translation = {
         '0': 'zero',
@@ -58,6 +64,8 @@ def digits_to_text(text):
 #    string_question = ' '.join(str(word) for word in output)
 #    return string_question
 
+#checks if each word of text is present in spelling_corrections
+#if present changes to its correct word
 def spell_correct(text):
     return ' '.join(
         spelling_corrections.get(word, word)
