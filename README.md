@@ -105,6 +105,7 @@ Tried with the concatenation of LSTM outputs passed through a dense layer as wel
 | Siamese LSTM + Glove + Magic features  + Normal features + Class weights + four Stacked layers| 86 | 0.19680|
 
 * On Kaggle
+
 ![Kaggle Log loss](images/Capture.PNG?raw=true "Test results trend")
 
 ## Built With
