@@ -77,7 +77,15 @@ Tried with the concatenation of LSTM outputs passed through a dense layer as wel
   - Trend of Accuracy and Log Loss percentage over number of epochs on validation data set
   ![Cross Validation Basic Results](images/validation.png?raw=true "Validation results trend")
 
-* After improving the architecture and experimenting
+* | Model | Validation Accuracy  | Public Log loss on Kaggle |
+|--|--|-- |
+| Siamese LSTM + custom trained word2vec embeddings|76  | 0.39243 |
+| Siamese LSTM + word2vec pretrained embeddings|75  | 0.43440 |
+| Siamese LSTM + custom trained Glove embeddings|77  | NA |
+| Siamese LSTM + Glove + Magic features | 83 | 0.32236|
+| Siamese LSTM + Glove + Magic features + Normal features | 86 | 0.26116|
+| Siamese LSTM + Glove + Magic features + Normal features + Class weights| 82 | 0.23826|
+| Siamese LSTM + Glove + Magic features  + Normal features + Class weights + Stacked layers| 83 | 0.20457|
 
 * On Kaggle competition
 
