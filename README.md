@@ -11,27 +11,27 @@ We propose an efficient model to identify semantically identical question pairs 
 These instructions will get you a copy of the project up and running on your local machine for development and testing purposes.
 
 ### Prerequisites
-|  |  |  |
-|--|--|--|
-| anaconda | custom | py27h4a00acb_0|                             
-|conda|                     4.3.30|           py27h6ae6dc7_0|
-|Fuzzywuzzy     |           0.16.0     |               pip|
-|h5py           |           2.7.0  |             np113py27_0|
-|hdf5         |             1.8.17 |                       2|
-|jupyter      |             1.0.0         |            pip|
-|Keras      |               2.0.9         |            pip|
-|matplotlib   |             2.0.2      |         np113py27_0|
-|numpy        |             1.13.3      |              pip|
-|NLTK				|3.2.5							| pip|
-|pandas              |      0.21.0           |        pip|
-|pip           |            8.1.2      |           py27_0|
-|python                 |   2.7.11         |            5|
-|scikit-learn          |    0.19.1        | py27h445a80a_0|
-|scipy          |           1.0.0           |          pip|
-|TextBlob       |           0.15.1      |              pip|
-|tensorflow-gpu   |         1.4.0     |                pip|
-|tensorflow-tensorboard  |  0.4.0rc2  |                pip|
-|xgboost           |        0.6        |               pip|
+| Prerequisites | Version  | 
+|--|--|
+| anaconda | custom |                             
+|conda|                     4.3.30|        
+|Fuzzywuzzy     |           0.16.0     |  
+|h5py           |           2.7.0  |             
+|hdf5         |             1.8.17 |
+|jupyter      |             1.0.0         |           
+|Keras      |               2.0.9         |            
+|matplotlib   |             2.0.2      |       
+|numpy        |             1.13.3      |           
+|NLTK				|3.2.5							| 
+|pandas              |      0.21.0           |    
+|pip           |            8.1.2      |          
+|python                 |   2.7.11         |           
+|scikit-learn          |    0.19.1        | 
+|scipy          |           1.0.0           |          
+|TextBlob       |           0.15.1      |             
+|tensorflow-gpu   |         1.4.0     |                
+|tensorflow-tensorboard  |  0.4.0rc2  |                
+|xgboost           |        0.6        |               
 
 ### Requirements
 - Dataset: The dataset can be downloaded from the [Kaggle competition](https://www.kaggle.com/c/quora-question-pairs/data).
@@ -76,6 +76,15 @@ Tried with the concatenation of LSTM outputs passed through a dense layer as wel
   ![Train Basic Results](images/train.png?raw=true "Test results trend")
   - Trend of Accuracy and Log Loss percentage over number of epochs on validation data set
   ![Cross Validation Basic Results](images/validation.png?raw=true "Validation results trend")
+  
+  The final accuracy and loss values after the first implementation
+
+  |  |Accuracy|Log Loss|
+  |--|--|--|
+  |Train data set|77.99%|0.1552|
+  |Test data set| 76.25%|0.1665|
+
+* After the basic implementation we performed various manipulations and experiments to improve performance. The respective values of each experiment is mentioned below: 
 
 | Model | Validation Accuracy  | Public Log loss on Kaggle |
 |--|--|-- |
