@@ -22,7 +22,11 @@ import os
 import numpy as np
 import tensorflow as tf
 from sentenceToWordList import *
-from util import ManDist
+import keras.backend as K
+
+from math import *
+from decimal import Decimal
+from scipy.spatial import distance
 
 inverse_dictionary = np.load(COMPUTE_DATA_PATH + 'g_inverse_dictionary.npy').item()
 for key, value in inverse_dictionary.items():
@@ -34,6 +38,9 @@ dictionary = {}
 
 for index in range(len(inverse_dictionary)):
 	dictionary[inverse_dictionary[index].decode("utf-8")] = index
+
+print(train_df.shape)
+print(test_df.shape)
 	
 for dataTuple in [train_df, test_df]:
 	for index, row in dataTuple.iterrows():
@@ -45,6 +52,8 @@ for dataTuple in [train_df, test_df]:
 			if (len(numVector) > maxSeqLength):
 				numVector = numVector[0:maxSeqLength]
 			dataTuple.set_value(index, question, numVector)
+
+print("vector generation done!")
 
 validation_size = 4
 reqColumns= ['question1', 'question2', 'min_freq', 'common_neighbours', 'q_len1', 'q_len2', 'diff_len', 'word_len1', 'word_len2', 'common_words']
@@ -59,6 +68,7 @@ for dataTuple in [xTrain, xValidation]:
 	for i in range(2):
 		dataTuple[i] = pad_sequences(dataTuple[i], maxlen=maxSeqLength)
 
+print("sequences padded")
 # Model variables
 n_hidden = 50
 gradientClippingNorm = 1.25
@@ -66,6 +76,14 @@ batch_size = 64
 #keep n_epoch a multiple of 5
 n_epoch = 1
 embedding_dim = 300
+
+def euclidean_distance(l,r):
+ 	return K.sqrt(K.sum(K.square(l - r), axis=-1, keepdims=True))
+
+def manhattan_distance(l, r):
+	abs_v = K.abs(l-r)
+	sum_v = K.sum(abs_v,axis=1,keepdims=True)
+	return K.exp(-sum_v)
 
 leftInput = Input(shape=(maxSeqLength,), dtype='int32')
 rightInput = Input(shape=(maxSeqLength,), dtype='int32')
@@ -91,9 +109,10 @@ rightOutput = sharedLstm(encodedRight)
 #output = concatenate([leftOutput, rightOutput])
 #output = Dense(1, activation = 'relu')(output)
 
-malstm_distance = ManDist()([leftOutput, rightOutput])
+#malstm_distance = ManDist()([leftOutput, rightOutput])
+dist = Merge(mode=lambda x: euclidean_distance(x[0], x[1]), output_shape=lambda x: (x[0][0], 1))([leftOutput, rightOutput])
 
-output = concatenate([malstm_distance, minFreq, commonNeigh, q_len1, q_len2, diff_len, word_len1, word_len2, common_words])
+output = concatenate([dist, minFreq, commonNeigh, q_len1, q_len2, diff_len, word_len1, word_len2, common_words])
 output = Dense(1, activation = 'sigmoid')(output)
 
 
@@ -131,16 +150,16 @@ for dataTuple in [xTrain]:
 		dataTuple[i] = pad_sequences(dataTuple[i], maxlen=maxSeqLength)
 
 # load json and create model
-json_file = open(MODELS_PATH + 'siameseLSTM_JSON.json', 'r')
-loaded_model_json = json_file.read()
-json_file.close()
-loaded_model = model_from_json(loaded_model_json)
+#json_file = open(MODELS_PATH + 'siameseLSTM_JSON.json', 'r')
+#loaded_model_json = json_file.read()
+#json_file.close()
+#loaded_model = model_from_json(loaded_model_json)
 # load weights into new model
-loaded_model.load_weights(MODELS_PATH + "siameseLSTM_WEIGHTS.h5")
+#loaded_model.load_weights(MODELS_PATH + "siameseLSTM_WEIGHTS.h5")
 
-print("Loaded model from disk")
+#print("Loaded model from disk")
 
-predictions = loaded_model.predict([xTrain[0],xTrain[1], xTrain[2], xTrain[3], xTrain[4], xTrain[5], xTrain[6], xTrain[7], xTrain[8], xTrain[9]])
+predictions = siameseLSTM.predict([xTrain[0],xTrain[1], xTrain[2], xTrain[3], xTrain[4], xTrain[5], xTrain[6], xTrain[7], xTrain[8], xTrain[9]])
 print("predictions ready")
 print("Geerating sub file")
 import pandas as pdn
