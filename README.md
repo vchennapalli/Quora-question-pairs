@@ -110,7 +110,7 @@ Tried with the concatenation of LSTM outputs passed through a dense layer as wel
 * On Kaggle
 
 ![Kaggle Log loss](images/Capture.PNG?raw=true "Test results trend")
-![Kaggle Log loss](images/VineethSumbissions.PNG?raw=true "Test results trend")
+![Kaggle Log loss](images/VineethSumbissions.png?raw=true "Test results trend")
 
 
 ## Built With
