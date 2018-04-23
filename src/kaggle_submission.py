@@ -28,7 +28,7 @@ from sentenceToWordList import *
 del train_df
 
 #loading the inverse dictionary
-inverse_dictionary = np.load(COMPUTE_DATA_PATH + 'inverse_dictionary.npy').item()
+inverse_dictionary = np.load(COMPUTE_DATA_PATH + 'g_inverse_dictionary.npy').item()
 for key, value in inverse_dictionary.items():
 	inverse_dictionary[key] = value.encode('ascii')
 
@@ -50,7 +50,13 @@ for dataTuple in [test_df]:
 				numVector = numVector[0:maxSeqLength]
 			dataTuple.set_value(index, question, numVector)
 
-xTrain = [np.array(test_df['question1'].tolist()), np.array(test_df['question2'].tolist())]
+xTrain = [np.array(test_df['question1'].tolist()), np.array(test_df['question2'].tolist()), np.array(test_df['min_freq'].tolist()),
+        np.array(test_df['common_neighbours'].tolist()), np.array(test_df['q_len1'].tolist()), np.array(test_df['q_len2'].tolist()),
+        np.array(test_df['diff_len'].tolist()), np.array(test_df['word_len1'].tolist()), np.array(test_df['word_len2'].tolist()),
+        np.array(test_df['common_words'].tolist()), np.array(test_df['fuzzy_qratio'].tolist()), np.array(test_df['fuzzy_wratio'].tolist()),
+        np.array(test_df['fuzzy_partial_ratio'].tolist()), np.array(test_df['fuzzy_partial_token_set_ratio'].tolist()),
+        np.array(test_df['fuzzy_partial_token_sort_ratio'].tolist()), np.array(test_df['fuzzy_token_set_ratio'].tolist()),
+        np.array(test_df['fuzzy_token_sort_ratio'].tolist())]
 
 for dataTuple in [xTrain]:
 	for i in range(2):
@@ -67,10 +73,12 @@ loaded_model.load_weights(MODELS_PATH + "siameseLSTM_WEIGHTS.h5")
 print("Loaded model from disk")
 
 #getting the predictions from the loaded_model
-predictions = loaded_model.predict([xTrain[0],xTrain[1]])
+predictions = loaded_model.predict([xTrain[0],xTrain[1], xTrain[2], xTrain[3], xTrain[4], xTrain[5], xTrain[6], xTrain[7], xTrain[8], xTrain[9], \
+	xTrain[10],xTrain[11], xTrain[12], xTrain[13], xTrain[14], xTrain[15], xTrain[16]])
+
+
 print("predictions ready")
-print("Geerating sub file")
-import pandas as pdn
+print("Generating sub file")
 
 #writing the predictions to a csv file for kaggle submission
 sub_df = pd.DataFrame(data=predictions,columns={"is_duplicate"})
