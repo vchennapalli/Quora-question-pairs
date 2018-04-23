@@ -15,8 +15,9 @@ These instructions will get you a copy of the project up and running on your loc
 |--|--|
 | anaconda | custom |                             
 |conda|                     4.3.30|        
-|Fuzzywuzzy     |           0.16.0     |  
-|h5py           |           2.7.0  |             
+|Fuzzywuzzy     |           0.16.0     |
+|glove-python   |                  |
+|h5py           |           2.7.0  |           
 |hdf5         |             1.8.17 |
 |jupyter      |             1.0.0         |           
 |Keras      |               2.0.9         |            
@@ -102,11 +103,15 @@ Tried with the concatenation of LSTM outputs passed through a dense layer as wel
 | Siamese LSTM + Glove + Magic features + Normal features | 86 | 0.26116|
 | Siamese LSTM + Glove + Magic features + Normal features + Class weights| 82 | 0.23826|
 | Siamese LSTM + Glove + Magic features  + Normal features + Class weights + two Stacked layers| 83 | 0.20457|
-| Siamese LSTM + Glove + Magic features  + Normal features + Class weights + four Stacked layers| 86 | 0.19680|
+| Siamese LSTM + Glove + Magic features  + Normal features + Class weights + four Stacked layers| 87 | 0.19680|
+| Siamese LSTM + Glove + Magic features  + Normal features + Class weights + four Stacked layers + Attention Mechanism| 85 | 0.21552|
+| Siamese LSTM(more LSTM units) + Glove + Magic features  + Normal features + Class weights + four Stacked layers + Attention Mechanism| 85 | 0.22527|
 
 * On Kaggle
 
 ![Kaggle Log loss](images/Capture.PNG?raw=true "Test results trend")
+![Kaggle Log loss](images/VineethSumbissions.PNG?raw=true "Test results trend")
+
 
 ## Built With
 
