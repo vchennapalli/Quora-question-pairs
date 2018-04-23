@@ -85,15 +85,15 @@ Tried with the concatenation of LSTM outputs passed through a dense layer as wel
 
 * MODEL TRAINING
 
-   - python3 siameseNetwork.py     // Trains the model and generates predictions.
+   - python3 siameseNetwork.py  
 
 * GENERATING PREDICTIONS ON AN ALREADY TRAINED MODEL
 
    - cd ../models
    - Download the pre-trained model from https://drive.google.com/file/d/1ddvHgG42KQG6uuZVtcxSzNhy_CeBDmKt/view?usp=sharing as mentioned in the requirements into this folder.
-   - unzip siameseLSTM_MODEL.zip (
+   - unzip siameseLSTM_MODEL.zip 
    - cd ../src
-   -  python3 kaggle_submission.py  // For generating predictions on an already trained model.
+   -  python3 kaggle_submission.py 
 
 * The file to be submitted on Kaggle, kaggle_sub.csv, could be found in ../results file.
 
