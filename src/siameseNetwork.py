@@ -21,23 +21,19 @@ import os
 
 import numpy as np
 import tensorflow as tf
-#train_df and test_df are processed and imported from sentenceToWordList
 from sentenceToWordList import *
 
-#loading the inverse dictionary
 inverse_dictionary = np.load(COMPUTE_DATA_PATH + 'g_inverse_dictionary.npy').item()
 for key, value in inverse_dictionary.items():
 	inverse_dictionary[key] = value.encode('ascii')
 
 embeddingsMatrix = np.loadtxt(COMPUTE_DATA_PATH + 'g_embedding_matrix.txt')
 
-#populating the dictionary
 dictionary = {}
 
 for index in range(len(inverse_dictionary)):
 	dictionary[inverse_dictionary[index].decode("utf-8")] = index
-
-#converting the questions into number vectors
+	
 for dataTuple in [train_df, test_df]:
 	for index, row in dataTuple.iterrows():
 		for question in question_cols:
@@ -49,17 +45,22 @@ for dataTuple in [train_df, test_df]:
 				numVector = numVector[0:maxSeqLength]
 			dataTuple.set_value(index, question, numVector)
 
-validation_size = 40000
-reqColumns= ['question1', 'question2', 'min_freq', 'common_neighbours', 'q_len1', 'q_len2', 'diff_len', 'word_len1', 'word_len2', 'common_words']
-xTrain, xValidation, yTrain, yValidation = train_test_split(train_df[reqColumns],
+validation_size = 20000
+reqColumns= ['question1', 'question2', 'min_freq', 'common_neighbours', 'q_len1', 'q_len2', 'diff_len', \
+            'word_len1', 'word_len2', 'common_words', 'fuzzy_qratio', 'fuzzy_wratio', 'fuzzy_partial_ratio', \
+            'fuzzy_partial_token_set_ratio', 'fuzzy_partial_token_sort_ratio', 'fuzzy_token_set_ratio', 'fuzzy_token_sort_ratio']
+xTrain, xValidation, yTrain, yValidation = train_test_split(train_df[reqColumns], 
 								train_df['is_duplicate'], test_size=validation_size)
 
-xTrain = [xTrain.question1, xTrain.question2, xTrain.min_freq, xTrain.common_neighbours, xTrain.q_len1, xTrain.q_len2, xTrain.diff_len,
-			xTrain.word_len1, xTrain.word_len2, xTrain.common_words]
-xValidation = [xValidation.question1, xValidation.question2,  xValidation.min_freq, xValidation.common_neighbours, xValidation.q_len1,
-			xValidation.q_len2, xValidation.diff_len, xValidation.word_len1, xValidation.word_len2, xValidation.common_words]
+xTrain = [xTrain.question1, xTrain.question2, xTrain.min_freq, xTrain.common_neighbours, xTrain.q_len1, xTrain.q_len2, xTrain.diff_len, \
+	xTrain.word_len1, xTrain.word_len2, xTrain.common_words, xTrain.fuzzy_qratio, xTrain.fuzzy_wratio, xTrain.fuzzy_partial_ratio, \
+	xTrain.fuzzy_partial_token_set_ratio, xTrain.fuzzy_partial_token_sort_ratio, xTrain.fuzzy_token_set_ratio, xTrain.fuzzy_token_sort_ratio]
 
-#padding the sequences to make them of same length
+xValidation = [xValidation.question1, xValidation.question2,  xValidation.min_freq, xValidation.common_neighbours, xValidation.q_len1, \
+	xValidation.q_len2, xValidation.diff_len, xValidation.word_len1, xValidation.word_len2, xValidation.common_words, xValidation.fuzzy_qratio, \
+	xValidation.fuzzy_wratio, xValidation.fuzzy_partial_ratio, xValidation.fuzzy_partial_token_set_ratio, xValidation.fuzzy_partial_token_sort_ratio, \
+	xValidation.fuzzy_token_set_ratio, xValidation.fuzzy_token_sort_ratio]
+
 for dataTuple in [xTrain, xValidation]:
 	for i in range(2):
 		dataTuple[i] = pad_sequences(dataTuple[i], maxlen=maxSeqLength)
@@ -69,10 +70,9 @@ n_hidden = 50
 gradientClippingNorm = 1.25
 batch_size = 64
 #keep n_epoch a multiple of 5
-n_epoch = 6
+n_epoch = 3
 embedding_dim = 300
 
-#describing the shape of various inputs
 leftInput = Input(shape=(maxSeqLength,), dtype='int32')
 rightInput = Input(shape=(maxSeqLength,), dtype='int32')
 minFreq = Input(shape=(1,), dtype='float32')
@@ -83,48 +83,75 @@ diff_len = Input(shape=(1,), dtype='float32')
 word_len1 = Input(shape=(1,), dtype='float32')
 word_len2 = Input(shape=(1,), dtype='float32')
 common_words = Input(shape=(1,), dtype='float32')
+fuzzy_qratio = Input(shape=(1,), dtype='float32')
+fuzzy_wratio = Input(shape=(1,), dtype='float32')
+fuzzy_partial_ratio = Input(shape=(1,), dtype='float32')
+fuzzy_partial_token_set_ratio = Input(shape=(1,), dtype='float32')
+fuzzy_partial_token_sort_ratio = Input(shape=(1,), dtype='float32')
+fuzzy_token_set_ratio = Input(shape=(1,), dtype='float32')
+fuzzy_token_sort_ratio = Input(shape=(1,), dtype='float32')
 
-#embedding layer to generate word embeddings
+
 embeddingLayer = Embedding(len(embeddingsMatrix), embedding_dim, weights=[embeddingsMatrix], input_length=maxSeqLength, trainable=False)
 
 encodedLeft = embeddingLayer(leftInput)
 encodedRight = embeddingLayer(rightInput)
 
-#LSTM layer
 sharedLstm = CuDNNLSTM(n_hidden)
 
-#to grab outputs from LSTM
 leftOutput = sharedLstm(encodedLeft)
 rightOutput = sharedLstm(encodedRight)
 
-#concatenate the outputs from two LSTMs and pass it through dense layer
 output = concatenate([leftOutput, rightOutput])
 output = Dense(1, activation = 'relu')(output)
 
-output = concatenate([output, minFreq, commonNeigh, q_len1, q_len2, diff_len, word_len1, word_len2, common_words])
+output = concatenate([output, minFreq, commonNeigh, q_len1, q_len2, diff_len, word_len1, word_len2, common_words, \
+	fuzzy_qratio, fuzzy_wratio, fuzzy_partial_ratio, fuzzy_partial_token_set_ratio, fuzzy_partial_token_sort_ratio, \
+	fuzzy_token_set_ratio, fuzzy_token_sort_ratio])
+
 output = BatchNormalization()(output)
+
 output = Dense(300)(output)
 output = PReLU()(output)
 output = Dropout(0.2)(output)
 output = BatchNormalization()(output)
+
+output = Dense(300)(output)
+output = PReLU()(output)
+output = Dropout(0.2)(output)
+output = BatchNormalization()(output)
+
+utput = Dense(300)(output)
+output = PReLU()(output)
+output = Dropout(0.2)(output)
+output = BatchNormalization()(output)
+
+output = Dense(300)(output)
+output = PReLU()(output)
+output = Dropout(0.2)(output)
+output = BatchNormalization()(output)
+
 output = Dense(1, activation = 'sigmoid')(output)
 
-#model for the siamese LSTM
-siameseLSTM = Model([leftInput, rightInput, minFreq, commonNeigh, q_len1, q_len2, diff_len, word_len1, word_len2, common_words], [output])
+
+siameseLSTM = Model([leftInput, rightInput, minFreq, commonNeigh, q_len1, q_len2, diff_len, word_len1, word_len2, common_words, \
+	fuzzy_qratio, fuzzy_wratio, fuzzy_partial_ratio, fuzzy_partial_token_set_ratio, fuzzy_partial_token_sort_ratio, \
+	fuzzy_token_set_ratio, fuzzy_token_sort_ratio], [output])
 optimizer = Adadelta(clipnorm=gradientClippingNorm)
 
 siameseLSTM.compile(loss='binary_crossentropy', optimizer=optimizer, metrics=['accuracy'])
 
-#training begings
 training_start_time = time()
 
 print("Started training")
 for i in range(n_epoch):
-	siameseLSTMTrained = siameseLSTM.fit([xTrain[0], xTrain[1], xTrain[2], xTrain[3], xTrain[4], xTrain[5], xTrain[6], xTrain[7],
-						xTrain[8], xTrain[9]], yTrain.values, batch_size=batch_size, epochs=4,
-                            	validation_data=([xValidation[0], xValidation[1], xValidation[2], xValidation[3], xValidation[4], xValidation[5],
-					xValidation[6], xValidation[7], xValidation[8], xValidation[9]], yValidation.values), class_weight={0: 1.3233, 1: 0.4472})
-
+	siameseLSTMTrained = siameseLSTM.fit([xTrain[0], xTrain[1], xTrain[2], xTrain[3], xTrain[4], xTrain[5], xTrain[6], xTrain[7], 
+			xTrain[8], xTrain[9], xTrain[10], xTrain[11], xTrain[12], xTrain[13], xTrain[14], 
+			xTrain[15], xTrain[16]], yTrain.values, batch_size=batch_size, epochs=4,
+                validation_data=([xValidation[0], xValidation[1], xValidation[2], xValidation[3], xValidation[4], xValidation[5], 
+			xValidation[6], xValidation[7], xValidation[8], xValidation[9], xValidation[10], xValidation[11], xValidation[12], 
+			xValidation[13], xValidation[14], xValidation[15], xValidation[16]], yValidation.values), class_weight={0: 1.3233, 1: 0.4472})
+	
 	siameseLSTM_JSON = siameseLSTM.to_json()
 	with open("../models/siameseLSTM_JSON.json","w") as json_file:
 		json_file.write(siameseLSTM_JSON)
@@ -135,10 +162,13 @@ for i in range(n_epoch):
 
 print("Training time finished.\n{} epochs in {}".format(n_epoch, datetime.timedelta(seconds=time()-training_start_time)))
 
-xTrain = [np.array(test_df['question1'].tolist()), np.array(test_df['question2'].tolist()), np.array(test_df['min_freq'].tolist()),
-		np.array(test_df['common_neighbours'].tolist()), np.array(test_df['q_len1'].tolist()), np.array(test_df['q_len2'].tolist()),
-		np.array(test_df['diff_len'].tolist()), np.array(test_df['word_len1'].tolist()), np.array(test_df['word_len2'].tolist()),
-		np.array(test_df['common_words'].tolist())]
+xTrain = [np.array(test_df['question1'].tolist()), np.array(test_df['question2'].tolist()), np.array(test_df['min_freq'].tolist()), 
+	np.array(test_df['common_neighbours'].tolist()), np.array(test_df['q_len1'].tolist()), np.array(test_df['q_len2'].tolist()),
+	np.array(test_df['diff_len'].tolist()), np.array(test_df['word_len1'].tolist()), np.array(test_df['word_len2'].tolist()),
+	np.array(test_df['common_words'].tolist()), np.array(test_df['fuzzy_qratio'].tolist()), np.array(test_df['fuzzy_wratio'].tolist()), 
+	np.array(test_df['fuzzy_partial_ratio'].tolist()), np.array(test_df['fuzzy_partial_token_set_ratio'].tolist()), 
+	np.array(test_df['fuzzy_partial_token_sort_ratio'].tolist()), np.array(test_df['fuzzy_token_set_ratio'].tolist()), 
+	np.array(test_df['fuzzy_token_sort_ratio'].tolist())]
 
 for dataTuple in [xTrain]:
 	for i in range(2):
@@ -153,12 +183,12 @@ loaded_model = model_from_json(loaded_model_json)
 loaded_model.load_weights(MODELS_PATH + "siameseLSTM_WEIGHTS.h5")
 
 print("Loaded model from disk")
-#getting the predictions from the loaded_model
-predictions = loaded_model.predict([xTrain[0],xTrain[1], xTrain[2], xTrain[3], xTrain[4], xTrain[5], xTrain[6], xTrain[7], xTrain[8], xTrain[9]])
-print("predictions ready")
-print("Geerating sub file")
-import pandas as pdn
 
-#writing the predictions to a csv file for kaggle submission
+predictions = loaded_model.predict([xTrain[0],xTrain[1], xTrain[2], xTrain[3], xTrain[4], xTrain[5], xTrain[6], xTrain[7], xTrain[8], xTrain[9], 
+	xTrain[10],xTrain[11], xTrain[12], xTrain[13], xTrain[14], xTrain[15], xTrain[16]])
+print("predictions ready")
+print("Generating sub file")
+
 sub_df = pd.DataFrame(data=predictions,columns={"is_duplicate"})
 sub_df.to_csv(path_or_buf="../results/kaggle_sub.csv", columns={"is_duplicate"}, header=True, index=True, index_label="test_id")
+
