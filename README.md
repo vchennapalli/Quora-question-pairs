@@ -3,7 +3,7 @@
 ## Problem Statement
 A pair of questions are said to be identical if they have the same intent. Identifying these kind of semantically identical question pairs has been a crucial challenge in the field of Natural Language Processing (NLP). Obtaining an accurate solution for this would benefit the users of question and answer forum based websites such as Quora, stack overflow, reddit etc. Furthermore, the solutions obtained here could be used to solve other problems that are central to the field of NLP.
 
-We propose an efficient model to identify semantically identical question pairs by making use of Siamese Long Short Term Memory Networks (LSTMN) model. We made use of Glove, word2vec skip gram paradigm along with negative sampling to develop and train the embedding matrix. For the main model, we made use of concatenation to predict the similarity initially later experimented with various distance measures like Manhattan, Euclidean etc. 
+We propose an efficient model to identify semantically identical question pairs by making use of Siamese Long Short Term Memory Networks (LSTMN) model. We experimented with Glove, word2vec skip gram paradigm along with negative sampling models to develop and train the embedding matrix. For the main model, we made use of concatenation as similarity function. Output from this layer is sent through a serious of Batch Normalization Layer, Dense Layer, PReLU Layer, Dropout Layers before passing it through the prediction layer.
 
 
 ## Getting Started
@@ -35,7 +35,8 @@ These instructions will get you a copy of the project up and running on your loc
 |xgboost           |        0.6        |               
 
 ### Requirements
-- Dataset: The dataset can be downloaded from the [Kaggle competition](https://www.kaggle.com/c/quora-question-pairs/data).
+- Dataset: The dataset can be downloaded from the [Kaggle competition](https://www.kaggle.com/c/quora-question-pairs/data).The processed dataset which consists of all the handcrafted features we incorporated are already present in the repository.
+- Pretrained LSTM Model: The best performing model can be downloaded from https://drive.google.com/file/d/1ddvHgG42KQG6uuZVtcxSzNhy_CeBDmKt/view?usp=sharing .
 - The raw data downloaded should be placed in the `raw_data` directory inside project root folder.
 - Libraries Used: numpy, pandas, scikit-learn, matplot-lib, keras, tensorflow
 - Toolkit Used: nlkt 
@@ -43,7 +44,7 @@ These instructions will get you a copy of the project up and running on your loc
 ### Project Directory
 * Quora-question-pairs
    - computed_data - *To save the computed embeddings, dictionary and inverse dictionary*
-   - models - *To save thetrained models* 
+   - models - *To save the trained models* 
    - processed_data - *To save the initial processed data - spell corrections, digit translations, cleaning, expand negations, lower case etc*
    - src - *contains the python files to process, train and get predictions from the model* 
    - data_paths.txt - *holds the paths for the required files*
@@ -66,17 +67,35 @@ Tried with the concatenation of LSTM outputs passed through a dense layer as wel
 
 * cd Quora-question-pairs/
 
-* unzip computed_data/g_embedding_matrix.zip processed_data/processed_test_00.zip processed_data/processed_test_01.zip processed_data/processed_train.zip
+* cd computed_data
 
-* cat processed_data/split_p_test00.csv processed_data/split_p_test01.csv > processed_data/p_test.csv
+* unzip g_embedding_matrix.zip
 
-* python3 siameseNetwork.py     // Trains the model and generates predictions.
+* cd ../processed_data
 
-* unzip models/siameseLSTM_MODEL.zip
+* unzip processed_test_00.zip
 
-* python3 kaggle_submission.py  // For generating predictions on an already trained model.
+* unzip processed_test_01.zip
 
+* unzip processed_train.zip
 
+* cat split_p_test00.csv split_p_test01.csv > p_test.csv
+
+* cd ../src
+
+* MODEL TRAINING
+
+   - python3 siameseNetwork.py     // Trains the model and generates predictions.
+
+* GENERATING PREDICTIONS ON AN ALREADY TRAINED MODEL
+
+   - cd ../models
+   - Download the pre-trained model from https://drive.google.com/file/d/1ddvHgG42KQG6uuZVtcxSzNhy_CeBDmKt/view?usp=sharing as mentioned in the requirements into this folder.
+   - unzip siameseLSTM_MODEL.zip (
+   - cd ../src
+   -  python3 kaggle_submission.py  // For generating predictions on an already trained model.
+
+* The file to be submitted on Kaggle, kaggle_sub.csv, could be found in ../results file.
 
 ## Test results
 * First run with basic implementation
