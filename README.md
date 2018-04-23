@@ -35,7 +35,8 @@ These instructions will get you a copy of the project up and running on your loc
 |xgboost           |        0.6        |               
 
 ### Requirements
-- Dataset: The dataset can be downloaded from the [Kaggle competition](https://www.kaggle.com/c/quora-question-pairs/data).
+- Dataset: The dataset can be downloaded from the [Kaggle competition](https://www.kaggle.com/c/quora-question-pairs/data).The processed dataset which consists of all the handcrafted features we incorporated are already present in the repository.
+- Pretrained LSTM Model: The best performing model can be downloaded from https://drive.google.com/file/d/1ddvHgG42KQG6uuZVtcxSzNhy_CeBDmKt/view?usp=sharing .
 - The raw data downloaded should be placed in the `raw_data` directory inside project root folder.
 - Libraries Used: numpy, pandas, scikit-learn, matplot-lib, keras, tensorflow
 - Toolkit Used: nlkt 
@@ -66,17 +67,35 @@ Tried with the concatenation of LSTM outputs passed through a dense layer as wel
 
 * cd Quora-question-pairs/
 
-* unzip computed_data/g_embedding_matrix.zip processed_data/processed_test_00.zip processed_data/processed_test_01.zip processed_data/processed_train.zip
+* cd computed_data
 
-* cat processed_data/split_p_test00.csv processed_data/split_p_test01.csv > processed_data/p_test.csv
+* unzip g_embedding_matrix.zip
 
-* python3 siameseNetwork.py     // Trains the model and generates predictions.
+* cd ../processed_data
 
-* unzip models/siameseLSTM_MODEL.zip
+* unzip processed_test_00.zip
 
-* python3 kaggle_submission.py  // For generating predictions on an already trained model.
+* unzip processed_test_01.zip
 
+* unzip processed_train.zip
 
+* cat split_p_test00.csv split_p_test01.csv > p_test.csv
+
+* cd ../src
+
+* MODEL TRAINING
+
+   - python3 siameseNetwork.py     // Trains the model and generates predictions.
+
+* GENERATING PREDICTIONS ON AN ALREADY TRAINED MODEL
+
+   - cd ../models
+   - Download the pre-trained model from https://drive.google.com/file/d/1ddvHgG42KQG6uuZVtcxSzNhy_CeBDmKt/view?usp=sharing as mentioned in the requirements into this folder.
+   - unzip siameseLSTM_MODEL.zip (
+   - cd ../src
+   -  python3 kaggle_submission.py  // For generating predictions on an already trained model.
+
+* The file to be submitted on Kaggle, kaggle_sub.csv, could be found in ../results file.
 
 ## Test results
 * First run with basic implementation
