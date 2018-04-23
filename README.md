@@ -3,7 +3,7 @@
 ## Problem Statement
 A pair of questions are said to be identical if they have the same intent. Identifying these kind of semantically identical question pairs has been a crucial challenge in the field of Natural Language Processing (NLP). Obtaining an accurate solution for this would benefit the users of question and answer forum based websites such as Quora, stack overflow, reddit etc. Furthermore, the solutions obtained here could be used to solve other problems that are central to the field of NLP.
 
-We propose an efficient model to identify semantically identical question pairs by making use of Siamese Long Short Term Memory Networks (LSTMN) model. We experimented with Glove, word2vec skip gram paradigm along with negative sampling models to develop and train the embedding matrix. For the main model, we made use of concatenation as similarity function. Output from this layer is sent through a serious of batchNormalization, Dense Layer, PReLU Layer, Dropout Layers before passing it through the prediction layer.
+We propose an efficient model to identify semantically identical question pairs by making use of Siamese Long Short Term Memory Networks (LSTMN) model. We experimented with Glove, word2vec skip gram paradigm along with negative sampling models to develop and train the embedding matrix. For the main model, we made use of concatenation as similarity function. Output from this layer is sent through a serious of Batch Normalization Layer, Dense Layer, PReLU Layer, Dropout Layers before passing it through the prediction layer.
 
 
 ## Getting Started
