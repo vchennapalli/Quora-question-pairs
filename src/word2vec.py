@@ -1,3 +1,8 @@
+"""
+Took the reference from http://adventuresinmachinelearning.com/word2vec-keras-tutorial/
+"""
+
+
 from keras.models import Model
 from keras.layers import Input, Embedding, Dense, Reshape, merge
 from keras.preprocessing.sequence import make_sampling_table, skipgrams
@@ -27,23 +32,24 @@ def buildDataset(words):
     input: words - list
     output: data - list, freq - list of 2 unit components, dictionary - dict, inverseDict - dict
     """
+    dictionary, docWords, unknown = dict(), list(), 0
+
     freq = [['unknown', -1]]
     freq.extend(Counter(words).most_common())
-    dictionary = dict()
+    
     for w, c in freq:
         dictionary[w] = len(dictionary)
-    data = list()
-    unknown = 0
+    
     for w in words:
         if w in dictionary:
             i = dictionary[w]
         else:
             i = 0
             unknown += 1
-        data.append(i)
+        allWords.append(i)
     freq[0][1] = unknown
     inverseDict = dict(zip(dictionary.values(), dictionary.keys()))
-    return data, freq, dictionary, inverseDict
+    return docWords, freq, dictionary, inverseDict
 
 """performs primary preprocessing of data and returns polished data"""
 def collectDataset():
@@ -53,11 +59,11 @@ def collectDataset():
     #files = [train_df, test_df]
     files = [train_df]
     vocabulary = readData(files)
-    data, freq, dictionary, inverseDict = buildDataset(vocabulary)
+    docWords, freq, dictionary, inverseDict = buildDataset(vocabulary)
     del vocabulary
-    return data, freq, dictionary, inverseDict
+    return docWords, freq, dictionary, inverseDict
 
-data, freq, dictionary, inverseDict = collectDataset()
+docWords, freq, dictionary, inverseDict = collectDataset()
 
 windowSize, vectorDim, epochs = 5, 300, 70000
 
@@ -68,14 +74,14 @@ wordTargetArray = np.zeros((1,))
 wordContextArray = np.zeros((1,))
 labelsArray = np.zeros((1,))
 
-sampleTable = make_sampling_table(vocab_size)
-pairs, labels = skipgrams(data, vocab_size, window_size = windowSize, sampling_table = sampleTable)
+sampleTable = make_sampling_table(vocabSize)
+pairs, labels = skipgrams(docWords, vocabSize, window_size = windowSize, sampling_table = sampleTable)
 wordTarget, wordContext = zip(*pairs)
 wordTarget = np.array(wordTarget, dtype = "int32")
 wordContext = np.array(wordContext, dtype = "int32")
 
 inputTarget, inputContext = Input((1,)), Input((1,))
-embedding = Embedding(vocab_size, vectorDim, input_length = 1, name = 'embedding')
+embedding = Embedding(vocabSize, vectorDim, input_length = 1, name = 'embedding')
 target = embedding(inputTarget)
 target = Reshape((vectorDim, 1))(target)
 context = embedding(inputContext)
@@ -108,10 +114,10 @@ class SimCallback:
 
     @staticmethod
     def getSim(validIdx):
-        sim = np.zeros((vocab_size,))
+        sim = np.zeros((vocabSize,))
         internalArr1, internalArr2 = np.zeros((1,)), np.zeros((1,))
         internalArr1[0,] = validIdx
-        for i in range(vocab_size):
+        for i in range(vocabSize):
             internalArr2[0,] = i
             output = validationModel.predict_on_batch([internalArr1, internalArr2])
             sim[i] = output
