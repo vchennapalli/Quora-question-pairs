@@ -3,7 +3,7 @@
 ## Problem Statement
 A pair of questions are said to be identical if they have the same intent. Identifying these kind of semantically identical question pairs has been a crucial challenge in the field of Natural Language Processing (NLP). Obtaining an accurate solution for this would benefit the users of question and answer forum based websites such as Quora, stack overflow, reddit etc. Furthermore, the solutions obtained here could be used to solve other problems that are central to the field of NLP.
 
-We propose an efficient model to identify semantically identical question pairs by making use of Siamese Long Short Term Memory Networks (LSTMN) model. We made use of Glove, word2vec skip gram paradigm along with negative sampling to develop and train the embedding matrix. For the main model, we made use of concatenation to predict the similarity initially later experimented with various distance measures like Manhattan, Euclidean etc. 
+We propose an efficient model to identify semantically identical question pairs by making use of Siamese Long Short Term Memory Networks (LSTMN) model. We experimented with Glove, word2vec skip gram paradigm along with negative sampling models to develop and train the embedding matrix. For the main model, we made use of concatenation as similarity function. Output from this layer is sent through a serious of batchNormalization, Dense Layer, PReLU Layer, Dropout Layers before passing it through the prediction layer.
 
 
 ## Getting Started
@@ -44,7 +44,7 @@ These instructions will get you a copy of the project up and running on your loc
 ### Project Directory
 * Quora-question-pairs
    - computed_data - *To save the computed embeddings, dictionary and inverse dictionary*
-   - models - *To save thetrained models* 
+   - models - *To save the trained models* 
    - processed_data - *To save the initial processed data - spell corrections, digit translations, cleaning, expand negations, lower case etc*
    - src - *contains the python files to process, train and get predictions from the model* 
    - data_paths.txt - *holds the paths for the required files*
