@@ -121,7 +121,7 @@ output = PReLU()(output)
 output = Dropout(0.2)(output)
 output = BatchNormalization()(output)
 
-utput = Dense(300)(output)
+output = Dense(300)(output)
 output = PReLU()(output)
 output = Dropout(0.2)(output)
 output = BatchNormalization()(output)
